@@ -4,9 +4,10 @@
 apt update && apt upgrade
 apt install git
 cd /tmp
-git clone https://github.com/laster13/seedbox.git
+git clone https://github.com/xavier84/seedbox.git
 cd seedbox
 mv seedbox.sh logo.sh /usr/local/bin
+cp -R includes /usr/local/bin
 mv iptables /etc/iptables
 cd /usr/local/bin
 chmod +x seedbox.sh logo.sh

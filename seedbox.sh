@@ -143,7 +143,7 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 			export VOLUMES_ROOT_PATH=/home/"$USERNAME"
 
 
-			read -rp "Voulez modifier la variable ci dessus ? (o/n) : " EXCLUDE
+			read -rp "Voulez modifier la variable home ci dessus ? (o/n) : " EXCLUDE
 				if [[ "$EXCLUDE" = "o" ]] || [[ "$EXCLUDE" = "O" ]]; then
 
 					echo -e "${CGREEN}${CEND}"
