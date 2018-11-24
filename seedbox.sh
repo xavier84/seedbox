@@ -1,41 +1,15 @@
 #!/bin/bash
 
-CSI="\033["
-CEND="${CSI}0m"
-CRED="${CSI}1;31m"
-CGREEN="${CSI}1;32m"
-CPURPLE="${CSI}1;35m"
-CCYAN="${CSI}1;36m"
-
-###################################################################################################################################################
-
-progress-bar() {
-  local duration=${1}
-printf '\n'
-echo -e "${CGREEN}Patientez ...	${CEND}"
-printf '\n'
-
-    already_done() { for ((done=0; done<$elapsed; done++)); do printf "#"; done }
-    remaining() { for ((remain=$elapsed; remain<$duration; remain++)); do printf " "; done }
-    percentage() { printf "| %s%%" $(( (($elapsed)*100)/($duration)*100/100 )); }
-    clean_line() { printf "\r"; }
-
-  for (( elapsed=1; elapsed<=$duration; elapsed++ )); do
-      already_done; remaining; percentage
-      sleep 0.2
-      clean_line
-  done
-  clean_line
-printf '\n'
-}
+. includes/functions.sh
+. includes/variable.sh
 
 clear
-logo.sh 
+logo.sh
 echo ""
 echo -e "${CCYAN}INSTALLATION${CEND}"
 	echo -e "${CGREEN}${CEND}"
 	echo -e "${CGREEN}   1) Installation de docker && docker-compose (Ubuntu, Debian) ${CEND}"
-	echo -e "${CGREEN}   2) Configuration du docker-compose ${CEND}"
+	echo -e "${CGREEN}   2) Configuration des variables pour docker-compose ${CEND}"
 	echo -e "${CGREEN}   3) Applications ${CEND}"
 	echo -e "${CGREEN}   4) Sécuriser la Seedbox ${CEND}"
 	echo -e "${CGREEN}   5) Sauvegarde && Restauration${CEND}"
@@ -53,14 +27,15 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 			echo -e "${CGREEN}-------------------------------------------------------------------------------------------------------------------------${CEND}"
 			echo ""
 			# Installation possible sur debian ou ubuntu
-			OS=$(cat /etc/*release | grep ^NAME | tr -d 'NAME="')
 			if [ "$OS" = "Ubuntu" ]
 			then
 				apt update && apt upgrade -y
-				apt install docker.io apache2-utils curl unzip -y
+				apt install apache2-utils curl unzip -y
 				curl https://raw.githubusercontent.com/scopatz/nanorc/master/install.sh | sh
-                        	curl -L https://github.com/docker/compose/releases/download/1.22.0/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose
-                        	chmod +x /usr/local/bin/docker-compose
+				curl -fsSL https://get.docker.com -o get-docker.sh
+				sh get-docker.sh
+                curl -L https://github.com/docker/compose/releases/download/1.22.0/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose
+                chmod +x /usr/local/bin/docker-compose
 				mkdir -p /etc/apache2
 				touch /etc/apache2/.htpasswd
 				clear
@@ -72,25 +47,14 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 
 			else
 				apt update && apt upgrade -y
-				apt install -y \
-				apache2-utils \
-				unzip \
-                        	apt-transport-https \
-                        	ca-certificates \
-                        	curl \
-                        	gnupg2 \
-				lsb-release \
-                        	software-properties-common
-                        	curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add -
+				apt install apache2-utils curl unzip -y
 				curl https://raw.githubusercontent.com/scopatz/nanorc/master/install.sh | sh
-                        	add-apt-repository \
-                        	"deb [arch=amd64] https://download.docker.com/linux/debian \
-                        	$(lsb_release -cs) \
-                        	stable"
-                        	apt update
-                        	apt install docker-ce -y
-                        	curl -L https://github.com/docker/compose/releases/download/1.22.0/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose
-                        	chmod +x /usr/local/bin/docker-compose
+				curl -fsSL https://get.docker.com -o get-docker.sh
+				sh get-docker.sh
+                curl -L https://github.com/docker/compose/releases/download/1.22.0/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose
+                chmod +x /usr/local/bin/docker-compose
+                mkdir -p /etc/apache2
+				touch /etc/apache2/.htpasswd
 				clear
 				logo.sh
 				echo -e "${CCYAN}Installation docker & docker compose terminée${CEND}"
@@ -104,11 +68,11 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 
 		2) 	## Mise en place des variables necéssaire au docker-compose
 			clear
-			logo.sh			
+			logo.sh
 			echo -e "${CCYAN}-------------------------------------------------------------------------------------------------------------------------${CEND}"
 			echo -e "${CCYAN}					PRECISONS SUR LES VARIABLES							  ${CEND}"
 			echo -e "${CCYAN}-------------------------------------------------------------------------------------------------------------------------${CEND}"
-			echo -e "${CGREEN}		Cette étape permet une installation personnalisée configurable à vos besoins				 ${CEND}"	
+			echo -e "${CGREEN}		Cette étape permet une installation personnalisée configurable à vos besoins				 ${CEND}"
 			echo -e "${CGREEN}		Une fois les variables définies, la configuration sera complètement automatisée 			 ${CEND}"
 			echo -e "${CRED}-------------------------------------------------------------------------------------------------------------------------${CEND}"
 			echo -e "${CCYAN}															 ${CEND}"
@@ -133,12 +97,11 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 			if [ -n "$USERNAME" ]
 			then
 			 	export USERNAME
-				mkdir -p /etc/apache2
-				VAR=$(htpasswd -c /etc/apache2/.htpasswd $USERNAME 2>/dev/null)
+				htpasswd -c /etc/apache2/.htpasswd $USERNAME
 				VAR=$(sed -e 's/\$/\$$/g' /etc/apache2/.htpasswd 2>/dev/null)
 				export VAR
 			fi
-			
+
 			echo ""
 			echo -e "${CCYAN}Adresse mail ${CEND}"
 			read -rp "MAIL = " MAIL
@@ -147,11 +110,11 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 			then
 			 	export MAIL
 			fi
-			
+
 			echo ""
 			read -rp "Souhaitez vous utiliser Nextcloud ? (o/n) : " EXCLUDE
 			if [[ "$EXCLUDE" = "o" ]] || [[ "$EXCLUDE" = "O" ]]; then
-	
+
 				echo -e "${CGREEN}${CEND}"
 				read -rp "Choisir un mot de passe pour la base de donnée MARIADB = " PASS
 
@@ -168,21 +131,21 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 			echo -e "${CGREEN}				LA VARIABLE CI DESSOUS EST DEFINIE PAR DEFAULT SUR L HOTE			  	  ${CEND}"
 			echo -e "${CGREEN}															  ${CEND}"
 			echo -e "${CCYAN}-------------------------------------------------------------------------------------------------------------------------${CEND}"
-			echo -e "${CCYAN}	  ${CPURPLE}VOLUMES_ROOT_PATH:${CRED} Emplacement des volumes sur l'hote:	${CCYAN}/home/predator999	  ${CEND}"
+			echo -e "${CCYAN}	  ${CPURPLE}VOLUMES_ROOT_PATH:${CRED} Emplacement des volumes sur l'hote:	${CCYAN}/home/$USERNAME	  ${CEND}"
 			echo -e "${CCYAN}-------------------------------------------------------------------------------------------------------------------------${CEND}"
 			echo -e "${CGREEN}															  ${CEND}"
 			echo -e "${CGREEN}				TU PEUX MODIFIER CETTE VARIABLE A TA CONVENANCE						  ${CEND}"
 			echo -e "${CGREEN}															  ${CEND}"
 			echo -e "${CRED}-------------------------------------------------------------------------------------------------------------------------${CEND}"
 			echo -e "${CGREEN}${CEND}"
-			
+
 			# Variables par défault, peuvent être modifiée
-			export VOLUMES_ROOT_PATH=/home/predator999
+			export VOLUMES_ROOT_PATH=/home/"$USERNAME"
 
 
 			read -rp "Voulez modifier la variable ci dessus ? (o/n) : " EXCLUDE
 				if [[ "$EXCLUDE" = "o" ]] || [[ "$EXCLUDE" = "O" ]]; then
-	
+
 					echo -e "${CGREEN}${CEND}"
 					echo -e "${CCYAN}Par défault le montage des volumes est dans : /home/predator999 ${CEND}"
 					read -rp "VOLUMES_ROOT_PATH = " VOLUMES_ROOT_PATH
@@ -191,7 +154,7 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 						then
 			 				export VOLUMES_ROOT_PATH
 						else
-			 				VOLUMES_ROOT_PATH=/home/predator999
+			 				VOLUMES_ROOT_PATH=/home/"$USERNAME"
 			 				export VOLUMES_ROOT_PATH
 						fi
 				fi
@@ -206,10 +169,10 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 			echo -e "${CCYAN}			        exemple: Movies, Shows, Musics, Animes							  ${CEND}"
 			echo -e "${CGREEN}															  ${CEND}"
 			echo -e "${CCYAN}-------------------------------------------------------------------------------------------------------------------------${CEND}"
-			
+
 			## Création des dossiers locaux pour unionfs
 			mkdir -p ${VOLUMES_ROOT_PATH}
-			touch ${VOLUMES_ROOT_PATH}/local.txt	
+			touch ${VOLUMES_ROOT_PATH}/local.txt
 			read -rp "Taper ok pour démarrer: " EXCLUDE
 			cat <<- EOF > ${VOLUMES_ROOT_PATH}/local.txt
 			EOF
@@ -217,7 +180,7 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 			if [[ "$EXCLUDE" = "ok" ]] || [[ "$EXCLUDE" = "OK" ]]; then
     			echo -e "${CCYAN}\nTapez le nom des dossiers dans lesquels seront stockés les Medias, à la fin de chaque saisie appuyer sur la touche Entrée et taper ${CPURPLE}STOP${CEND}${CCYAN} si vous avez terminé.\n${CEND}"
     			while :
-    			do		
+    			do
         		read -p "" EXCLUDEPATH
         			if [[ "$EXCLUDEPATH" = "STOP" ]] || [[ "$EXCLUDEPATH" = "stop" ]]; then
             			break
@@ -235,7 +198,7 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 			SERIES=$(grep -E 'series|TV|tv|Series|SERIES|SERIES TV|Series TV|series tv|serie tv|serie TV|series TV|Shows' ${VOLUMES_ROOT_PATH}/local.txt | cut -d: -f2 | cut -d ' ' -f2-3)
 			ANIMES=$(grep -E 'ANIMES|ANIME|Animes|Anime|Animation|ANIMATION|animes|anime' ${VOLUMES_ROOT_PATH}/local.txt | cut -d: -f2 | cut -d ' ' -f2)
 			MUSIC=$(grep -E 'MUSIC|Music|music|Musiques|Musique|MUSIQUE|MUSIQUES|musiques|musique' ${VOLUMES_ROOT_PATH}/local.txt | cut -d: -f2 | cut -d ' ' -f2)
-			
+
 			export FILMS
 			export SERIES
 			export ANIMES
@@ -260,24 +223,9 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 			echo -e "${CRED}	${CCYAN}NEXTCLOUD_FQDN:${CRED}		nextcloud.${DOMAIN}							  ${CEND}"
 			echo -e "${CRED}	${CCYAN}HEIMDALL_FQDN:${CRED}		heimdall.${DOMAIN}							  ${CEND}"
 			echo -e "${CRED}-------------------------------------------------------------------------------------------------------------------------${CEND}"
-			echo -e "${CGREEN}				VOUS POUVEZ MODIFIER TOUTES CES VARIABLES A VOTRE CONVENANCE				  ${CEND}"	
+			echo -e "${CGREEN}				VOUS POUVEZ MODIFIER TOUTES CES VARIABLES A VOTRE CONVENANCE				  ${CEND}"
 			echo -e "${CGREEN}				TAPER ENSUITE SUR LA TOUCHE ENTREE POUR VALIDER 					  ${CEND}"
 			echo -e "${CRED}-------------------------------------------------------------------------------------------------------------------------${CEND}"
-
-			export PROXY_NETWORK=traefik_proxy
-			export TRAEFIK_DASHBOARD_URL=traefik.${DOMAIN}
-			export PLEX_FQDN=plex.${DOMAIN}
-			export PYLOAD_FQDN=pyload.${DOMAIN}
-			export MEDUSA_FQDN=medusa.${DOMAIN}
-			export RTORRENT_FQDN=rtorrent.${DOMAIN}
-			export RADARR_FQDN=radarr.${DOMAIN}
-			export SYNCTHING_FQDN=syncthing.${DOMAIN}
-			export JACKETT_FQDN=jackett.${DOMAIN}
-			export LIDARR_FQDN=lidarr.${DOMAIN}
-			export PORTAINER_FQDN=portainer.${DOMAIN}
-			export TAUTULLI_FQDN=tautulli.${DOMAIN}
-			export NEXTCLOUD_FQDN=nextcloud.${DOMAIN}
-			export HEIMDALL_FQDN=heimdall.${DOMAIN}
 
 			read -rp "Voulez-vous modifier les variables ci dessus ? (o/n) : " EXCLUDE
 			echo""
@@ -538,7 +486,7 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 			watch = true
 			exposedbydefault = false
 			EOF
-						
+
 			## creation du docker-compose personnalisé dans lequel viendront s'incrémenter les variables du fichier .envt
 			cat <<- EOF > /mnt/docker-compose.yml
 			version: '3'
@@ -556,7 +504,7 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 			      - traefik.docker.network=${PROXY_NETWORK}
 			      - traefik.frontend.auth.basic=${VAR}
 			    volumes:
-			      - /var/run/docker.sock:/var/run/docker.sock:ro  
+			      - /var/run/docker.sock:/var/run/docker.sock:ro
 			      - ${VOLUMES_ROOT_PATH}/traefik/traefik.toml:/traefik.toml:ro
 			      - ${VOLUMES_ROOT_PATH}/letsencrypt/certs:/etc/traefik/acme:rw
 			      - /var/log/traefik:/var/log
@@ -710,7 +658,7 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 			      - PGID=0
 			    networks:
 			      - proxy
-				  
+
 			  torrent:
 			    container_name: torrent
 			    image: xataz/rtorrent-rutorrent:filebot
@@ -879,7 +827,7 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 
 		3)
 			clear
-			logo.sh	
+			logo.sh
 			export $(xargs </mnt/.env)
 			cd /mnt
 			APPLI=""
@@ -906,7 +854,7 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 			echo -e "${CGREEN}   13) Retour Menu Principal ${CEND}"
 			echo ""
 			read -p "Appli choix [1-13]: " -e -i 1 APPLI
-			echo ""			
+			echo ""
 			case $APPLI in
 				1)
 				if ps -e | grep -q Plex; then
@@ -1173,7 +1121,7 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 					progress-bar 20
 					echo ""
 					echo -e "${CGREEN}Installation de nextcloud réussie${CEND}"
-				
+
 				echo ""
 				echo -e "${CRED}---------------------------------------------------------${CEND}"
 				echo -e "${CCYAN}       Paramètre de connection Nextcloud		 ${CEND}"
@@ -1191,7 +1139,7 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 				read -p "Appuyer sur la touche Entrer pour continuer"
 				clear
 				logo.sh
-				
+
 				fi
 
 				;;
@@ -1226,9 +1174,9 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 
 		echo -e ""
 			read -p "Outil choix [1-4]: " -e -i 1 OUTIL
-			echo ""			
+			echo ""
 			case $OUTIL in
-			
+
 				1) # Changer le passwd de root dans putty
 				clear
 				logo.sh
@@ -1242,7 +1190,7 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 				read -p "Appuyer sur la touche Entrer pour continuer"
 				clear
 				logo.sh
-				
+
 				;;
 
 				2) # Changer l'identification des applis docker
@@ -1284,7 +1232,7 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 				logo.sh
 
 				;;
-		
+
 				3) # Modification du port ssh et mise en place serveur mail
 
 				## Configuration postfix pour les mails
@@ -1298,7 +1246,7 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 				echo -e "${CCYAN}-------------------------------------------------------------------------------------------------------------------------${CEND}"
 				echo -e "${CCYAN}					PRECISONS IMPORTANTES								  ${CEND}"
 				echo -e "${CCYAN}-------------------------------------------------------------------------------------------------------------------------${CEND}"
-				echo -e "${CGREEN}		DECLARER LE HOSTNAME AUPRES DU REGISTRAR (enregistrement A pointant sur l'ip)				  ${CEND}"	
+				echo -e "${CGREEN}		DECLARER LE HOSTNAME AUPRES DU REGISTRAR (enregistrement A pointant sur l'ip)				  ${CEND}"
 				echo -e "${CGREEN}		Pour trouver le hostname taper "hostname" en ligne de commande						  ${CEND}"
 				echo -e "${CRED}--------------------------------------------------------------------------------------------------------------------------${CEND}"
 				echo -e "${CCYAN}															  ${CEND}"
@@ -1401,7 +1349,7 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 				apt install fail2ban portsentry -y
 				echo ""
 				read -rp "Quel est votre port ssh ? " PORT
-				echo "" 
+				echo ""
 
 				# Récupération ip serveur et ip domicile
 				IP_DOM=$(grep 'Accepted' /var/log/auth.log | cut -d ' ' -f11 | head -1)
@@ -1422,7 +1370,7 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 				banaction = iptables-multiport
 				maxretry = 5
 				EOF
-				
+
 				# Jail traefik
 				cat <<- EOF > /etc/fail2ban/jail.d/traefik.conf
 				[DEFAULT]
@@ -1466,26 +1414,26 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 				before = botsearch-common.conf
 
 				[Definition]
-				failregex = ^<HOST> \- \S+ \[\] \"(GET|POST|HEAD) \/<block> \S+\" 404 .+$				
+				failregex = ^<HOST> \- \S+ \[\] \"(GET|POST|HEAD) \/<block> \S+\" 404 .+$
 				EOF
 
 				# Action Traefik
 				cat <<- EOF > /etc/fail2ban/action.d/docker-action.conf
 				[Definition]
- 
+
 				actionstart = iptables -N f2b-traefik-auth
               				iptables -A f2b-traefik-auth -j RETURN
               				iptables -I FORWARD -p tcp -m multiport --dports 443 -j f2b-traefik-auth
- 
+
 				actionstop = iptables -D FORWARD -p tcp -m multiport --dports 443 -j f2b-traefik-auth
              				iptables -F f2b-traefik-auth
              				iptables -X f2b-traefik-auth
- 
+
 				actioncheck = iptables -n -L FORWARD | grep -q 'f2b-traefik-auth[ \t]'
- 
+
 				actionban = iptables -I f2b-traefik-auth -s <ip> -j DROP
- 
-				actionunban = iptables -D f2b-traefik-auth -s <ip> -j DROP				
+
+				actionunban = iptables -D f2b-traefik-auth -s <ip> -j DROP
 				EOF
 
 				# redémarrage des services
@@ -1553,9 +1501,9 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 		echo -e "${CGREEN}   3) Retour Menu Principal${CEND}"
 		echo -e ""
 			read -p "Sauve choix [1-3]: " -e -i 1 SAUVE
-			echo ""			
+			echo ""
 			case $SAUVE in
-			
+
 				1) # Sauvegarde des volumes
 				clear
 				logo.sh
@@ -1636,7 +1584,7 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 				read -p "Appuyer sur la touche Entrer pour continuer"
 				clear
 				logo.sh
-				
+
 				fi
 
 				;;
