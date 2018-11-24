@@ -5,19 +5,18 @@
 
 clear
 logo.sh
+while :; do
 echo ""
 echo -e "${CCYAN}INSTALLATION${CEND}"
 	echo -e "${CGREEN}${CEND}"
-	echo -e "${CGREEN}   1) Installation de docker && docker-compose (Ubuntu, Debian) ${CEND}"
+	echo -e "${CGREEN}   1) Installation/réinstallation  de docker && docker-compose (Ubuntu, Debian) ${CEND}"
 	echo -e "${CGREEN}   2) Configuration des variables pour docker-compose ${CEND}"
 	echo -e "${CGREEN}   3) Applications ${CEND}"
 	echo -e "${CGREEN}   4) Sécuriser la Seedbox ${CEND}"
 	echo -e "${CGREEN}   5) Sauvegarde && Restauration${CEND}"
 	echo -e "${CGREEN}   6) Quitter ${CEND}"
 	echo -e ""
-	until [[ "$PORT_CHOICE" =~ ^[1-6]$ ]]; do
-		read -p "Votre choix [1-6]: " -e -i 1 PORT_CHOICE
-	done
+	read -p "Votre choix [1-6]: " -e -i 1 PORT_CHOICE
 
 	case $PORT_CHOICE in
 		1) ## Installation de docker et docker-compose
@@ -43,7 +42,6 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 				echo -e "${CCYAN}Installation docker & docker compose terminée${CEND}"
 				echo ""
 				read -p "Appuyer sur la touche Entrer pour revenir au menu principal"
-				seedbox.sh
 
 			else
 				apt update && apt upgrade -y
@@ -60,7 +58,6 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 				echo -e "${CCYAN}Installation docker & docker compose terminée${CEND}"
 				echo ""
 				read -p "Appuyer sur la touche Entrer pour revenir au menu principal"
-				seedbox.sh
 
 				fi
 
@@ -85,31 +82,22 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 			echo -e "${CCYAN}Nom de domaine ${CEND}"
 			read -rp "DOMAIN = " DOMAIN
 
-			if [ -n "$DOMAIN" ]
-			then
-			 	export DOMAIN
-			fi
-
 			echo  ""
 			echo -e "${CCYAN}Nom d'utilisateur pour l'authentification WEB ${CEND}"
 			read -rp "USERNAME = " USERNAME
 
-			if [ -n "$USERNAME" ]
-			then
-			 	export USERNAME
-				htpasswd -c /etc/apache2/.htpasswd $USERNAME
-				VAR=$(sed -e 's/\$/\$$/g' /etc/apache2/.htpasswd 2>/dev/null)
-				export VAR
-			fi
+			echo  ""
+			echo -e "${CCYAN}Mot de passe pour l'authentification WEB ${CEND}"
+			read -rp "PASSWD = " PASSWD
+
 
 			echo ""
 			echo -e "${CCYAN}Adresse mail ${CEND}"
 			read -rp "MAIL = " MAIL
 
-			if [ -n "$MAIL" ]
-			then
-			 	export MAIL
-			fi
+			htpasswd -bs /etc/apache2/.htpasswd "$USERNAME" "$PASSWD"
+			htpasswd -cbs /etc/apache2/.htpasswd_"$USERNAME" "$USERNAME" "$PASSWD"
+			VAR=$(sed -e 's/\$/\$$/g' /etc/apache2/.htpasswd_"$USERNAME" 2>/dev/null)
 
 			echo ""
 			read -rp "Souhaitez vous utiliser Nextcloud ? (o/n) : " EXCLUDE
@@ -147,17 +135,22 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 				if [[ "$EXCLUDE" = "o" ]] || [[ "$EXCLUDE" = "O" ]]; then
 
 					echo -e "${CGREEN}${CEND}"
-					echo -e "${CCYAN}Par défault le montage des volumes est dans : /home/predator999 ${CEND}"
+					echo -e "${CCYAN}Par défault le montage des volumes est dans : /home/$USERNAME ${CEND}"
 					read -rp "VOLUMES_ROOT_PATH = " VOLUMES_ROOT_PATH
 
 						if [ -n "$VOLUMES_ROOT_PATH" ]
 						then
 			 				export VOLUMES_ROOT_PATH
+			 				mkdir -p ${VOLUMES_ROOT_PATH}
 						else
 			 				VOLUMES_ROOT_PATH=/home/"$USERNAME"
 			 				export VOLUMES_ROOT_PATH
+			 				mkdir -p ${VOLUMES_ROOT_PATH}
 						fi
+				else
+					mkdir -p ${VOLUMES_ROOT_PATH}
 				fi
+
 
 			clear
 			echo -e "${CCYAN}-------------------------------------------------------------------------------------------------------------------------${CEND}"
@@ -171,7 +164,6 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 			echo -e "${CCYAN}-------------------------------------------------------------------------------------------------------------------------${CEND}"
 
 			## Création des dossiers locaux pour unionfs
-			mkdir -p ${VOLUMES_ROOT_PATH}
 			touch ${VOLUMES_ROOT_PATH}/local.txt
 			read -rp "Taper ok pour démarrer: " EXCLUDE
 			cat <<- EOF > ${VOLUMES_ROOT_PATH}/local.txt
@@ -1600,7 +1592,12 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 
 		6)
 		exit 0
-
 		;;
+		*)
+				echo ""
+				progress-bar 5
+				echo ""
+				echo -e "${CRED}Maucvais choix${CEND}"
 
 	esac
+done

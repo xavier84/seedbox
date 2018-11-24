@@ -1,6 +1,8 @@
 # seedbox
 ```
 ## installation
+(si ubuntu)
+(sudo su)
 apt update && apt upgrade
 apt install git
 cd /tmp
