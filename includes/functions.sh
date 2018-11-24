@@ -48,23 +48,17 @@ calcul_port () {
 	PORT1=$(( $(($2))+HISTO ))
 }
 
-add_vhost() {
-	if [[ ! -f "$CONFDIR"/nginx/conf/"$1" ]]; then
-		cp "$BASEDIRDOCKER"/"$1"/"$1".conf "$CONFDIR"/nginx/conf/
-		sed_docker "$CONFDIR"/nginx/conf/"$1".conf
-		sed -i '$d' "$CONFDIR"/nginx/sites-enabled/seedbox.conf
-		cat <<- EOF >> "$CONFDIR"/nginx/sites-enabled/seedbox.conf
-		include /conf.d/$1.conf;
-		}
-		EOF
-	else
-		sed -i '$d' "$CONFDIR"/nginx/conf/"$1".conf
-			cat <<- EOF >> "$CONFDIR"/nginx/conf/"$1".conf
-			                if (\$remote_user = "%USER%") {
-		                        proxy_pass http://"$1"-%USER%:"$2";
-		                        break;
-			               }
-			      }
-			EOF
-	fi
+add_domain() {
+echo -e "${CCYAN}Sous domaine de $1 ${CEND}"
+DOMMAJ=$(echo "$1" | tr "[:lower:]" "[:upper:]")
+read -rp "${DOMMAJ}_FQDN = " DOM_FQDN
+
+
+if [ -n "$DOM_FQDN" ]
+then
+	export DOM_FQDN=${DOM_FQDN}.${DOMAIN}
+else
+	DOM_FQDN=plex.${DOMAIN}
+	export DOM_FQDN
+fi
 }
