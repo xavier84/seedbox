@@ -230,41 +230,38 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 					echo -e "${CCYAN}Sous domaine de Traefik${CEND}"
 					read -rp "TRAEFIK_DASHBOARD_URL = " TRAEFIK_DASHBOARD_URL
 
-						if [ -n "$TRAEFIK_DASHBOARD_URL" ]
+					if [ -n "$TRAEFIK_DASHBOARD_URL" ]
+					then
+			 			export TRAEFIK_DASHBOARD_URL=${TRAEFIK_DASHBOARD_URL}.${DOMAIN}
+					else
+			 			TRAEFIK_DASHBOARD_URL=traefik.${DOMAIN}
+			 			export TRAEFIK_DASHBOARD_URL
+					fi
+
+					for DOM in ${LISTAPP}
+					do
+						echo -e "${CCYAN}Sous domaine de ${DOM}${CEND}"
+						DOMMAJ=$(echo "$DOM" | tr "[:lower:]" "[:upper:]")
+						read -rp "${DOMMAJ}_FQDN = " DOM_FQDN
+						DOMMAJ=$(echo "$DOM" | tr "[:lower:]" "[:upper:]")
+
+						if [ -n "$DOM_FQDN" ]
 						then
-			 				export TRAEFIK_DASHBOARD_URL=${TRAEFIK_DASHBOARD_URL}.${DOMAIN}
+			 				export ${DOMMAJ}_FQDN=${DOM_FQDN}.${DOMAIN}
 						else
-			 				TRAEFIK_DASHBOARD_URL=traefik.${DOMAIN}
-			 				export TRAEFIK_DASHBOARD_URL
+			 				export ${DOMMAJ}_FQDN=${DOM}.${DOMAIN}
 						fi
+					done
 
-						for DOM in ${LISTAPP}
-						do
-							add_domain ${DOM}
-						done
-
-
+				else
+					for DOM in ${LISTAPP}
+					do
+						DOMMAJ=$(echo "$DOM" | tr "[:lower:]" "[:upper:]")
+						export ${DOMMAJ}_FQDN=${DOM}.${DOMAIN}
+					done
 				fi
-
+				export PROXY_NETWORK=traefik_proxy
 			## Création d'un fichier .env
-			docker network create traefik_proxy 2>/dev/null
-			docker network create torrent 2>/dev/null
-
-
-			export PROXY_NETWORK=traefik_proxy
-			export TRAEFIK_DASHBOARD_URL=traefik.${DOMAIN}
-			export PLEX_FQDN=plex.${DOMAIN}
-			export PYLOAD_FQDN=pyload.${DOMAIN}
-			export MEDUSA_FQDN=medusa.${DOMAIN}
-			export RTORRENT_FQDN=rtorrent.${DOMAIN}
-			export RADARR_FQDN=radarr.${DOMAIN}
-			export SYNCTHING_FQDN=syncthing.${DOMAIN}
-			export JACKETT_FQDN=jackett.${DOMAIN}
-			export LIDARR_FQDN=lidarr.${DOMAIN}
-			export PORTAINER_FQDN=portainer.${DOMAIN}
-			export TAUTULLI_FQDN=tautulli.${DOMAIN}
-			export NEXTCLOUD_FQDN=nextcloud.${DOMAIN}
-			export HEIMDALL_FQDN=heimdall.${DOMAIN}
 
 			cat <<- EOF > /mnt/.env
 			FILMS=$FILMS
@@ -295,6 +292,8 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 			EOF
 
 			## Création d'un fichier traefik.toml
+			docker network create traefik_proxy 2>/dev/null
+			docker network create torrent 2>/dev/null
 			mkdir -p ${VOLUMES_ROOT_PATH}/traefik
 			cat <<- EOF > ${VOLUMES_ROOT_PATH}/traefik/traefik.toml
 			defaultEntryPoints = ["https","http"]

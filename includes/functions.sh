@@ -58,7 +58,7 @@ if [ -n "$DOM_FQDN" ]
 then
 	export DOM_FQDN=${DOM_FQDN}.${DOMAIN}
 else
-	DOM_FQDN=plex.${DOMAIN}
+	DOM_FQDN="$1".${DOMAIN}
 	export DOM_FQDN
 fi
 }
