@@ -1,11 +1,14 @@
 #!/bin/bash
 
-. includes/functions.sh
-. includes/variable.sh
+
 
 clear
 logo.sh
 while :; do
+. /usr/local/bin/includes/functions.sh
+. /usr/local/bin/includes/variable.sh
+clear
+logo.sh
 echo ""
 echo -e "${CCYAN}INSTALLATION${CEND}"
 	echo -e "${CGREEN}${CEND}"
@@ -98,6 +101,7 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 			htpasswd -bs /etc/apache2/.htpasswd "$USERNAME" "$PASSWD"
 			htpasswd -cbs /etc/apache2/.htpasswd_"$USERNAME" "$USERNAME" "$PASSWD"
 			VAR=$(sed -e 's/\$/\$$/g' /etc/apache2/.htpasswd_"$USERNAME" 2>/dev/null)
+			export PASSWD
 
 			echo ""
 			read -rp "Souhaitez vous utiliser Nextcloud ? (o/n) : " EXCLUDE
@@ -221,46 +225,46 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 
 			read -rp "Voulez-vous modifier les variables ci dessus ? (o/n) : " EXCLUDE
 			echo""
-				if [[ "$EXCLUDE" = "o" ]] || [[ "$EXCLUDE" = "O" ]]; then
+			if [[ "$EXCLUDE" = "o" ]] || [[ "$EXCLUDE" = "O" ]]; then
 
 			echo -e "${CCYAN}-------------------------------------------------------------------------------------------------------------------------${CEND}"
 			echo -e "${CCYAN}				JUSTE SAISIR LE SOUS DOMAINE ET NON LE DOMAINE						  ${CEND}"
 			echo -e "${CCYAN}-------------------------------------------------------------------------------------------------------------------------${CEND}"
 
-					echo -e "${CCYAN}Sous domaine de Traefik${CEND}"
-					read -rp "TRAEFIK_DASHBOARD_URL = " TRAEFIK_DASHBOARD_URL
+			echo -e "${CCYAN}Sous domaine de Traefik${CEND}"
+			read -rp "TRAEFIK_DASHBOARD_URL = " TRAEFIK_DASHBOARD_URL
 
-					if [ -n "$TRAEFIK_DASHBOARD_URL" ]
-					then
-			 			export TRAEFIK_DASHBOARD_URL=${TRAEFIK_DASHBOARD_URL}.${DOMAIN}
-					else
-			 			TRAEFIK_DASHBOARD_URL=traefik.${DOMAIN}
-			 			export TRAEFIK_DASHBOARD_URL
-					fi
-
-					for DOM in ${LISTAPP}
-					do
-						echo -e "${CCYAN}Sous domaine de ${DOM}${CEND}"
-						DOMMAJ=$(echo "$DOM" | tr "[:lower:]" "[:upper:]")
-						read -rp "${DOMMAJ}_FQDN = " DOM_FQDN
-						DOMMAJ=$(echo "$DOM" | tr "[:lower:]" "[:upper:]")
-
-						if [ -n "$DOM_FQDN" ]
-						then
-			 				export ${DOMMAJ}_FQDN=${DOM_FQDN}.${DOMAIN}
-						else
-			 				export ${DOMMAJ}_FQDN=${DOM}.${DOMAIN}
-						fi
-					done
-
+				if [ -n "$TRAEFIK_DASHBOARD_URL" ]
+				then
+					export TRAEFIK_DASHBOARD_URL=${TRAEFIK_DASHBOARD_URL}.${DOMAIN}
 				else
+					export TRAEFIK_DASHBOARD_URL=traefik.${DOMAIN}
+				fi
+
+				for DOM in ${LISTAPP}
+				do
+					echo -e "${CCYAN}Sous domaine de ${DOM}${CEND}"
+					DOMMAJ=$(echo "$DOM" | tr "[:lower:]" "[:upper:]")
+					read -rp "${DOMMAJ}_FQDN = " DOM_FQDN
+					DOMMAJ=$(echo "$DOM" | tr "[:lower:]" "[:upper:]")
+
+					if [ -n "$DOM_FQDN" ]
+					then
+			 			export ${DOMMAJ}_FQDN=${DOM_FQDN}.${DOMAIN}
+					else
+			 			export ${DOMMAJ}_FQDN=${DOM}.${DOMAIN}
+					fi
+				done
+			else
+			 		export TRAEFIK_DASHBOARD_URL=traefik.${DOMAIN}
 					for DOM in ${LISTAPP}
 					do
 						DOMMAJ=$(echo "$DOM" | tr "[:lower:]" "[:upper:]")
 						export ${DOMMAJ}_FQDN=${DOM}.${DOMAIN}
 					done
-				fi
-				export PROXY_NETWORK=traefik_proxy
+			fi
+
+			export PROXY_NETWORK=traefik_proxy
 			## Création d'un fichier .env
 
 			cat <<- EOF > /mnt/.env
@@ -272,6 +276,7 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 			VAR=$VAR
 			MAIL=$MAIL
 			USERNAME=$USERNAME
+			PASSWD=$PASSWD
 			DOMAIN=$DOMAIN
 			PASS=$PASS
 			PROXY_NETWORK=$PROXY_NETWORK
@@ -294,50 +299,11 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 			## Création d'un fichier traefik.toml
 			docker network create traefik_proxy 2>/dev/null
 			docker network create torrent 2>/dev/null
-			mkdir -p ${VOLUMES_ROOT_PATH}/traefik
-			cat <<- EOF > ${VOLUMES_ROOT_PATH}/traefik/traefik.toml
-			defaultEntryPoints = ["https","http"]
-			InsecureSkipVerify = true
+			mkdir -p ${VOLUMES_TRAEFIK_PATH}
 
-			[api]
-			entryPoint = "traefik"
-			dashboard = true
-
-			[entryPoints]
-			  [entryPoints.http]
-			  address = ":80"
-			    [entryPoints.http.redirect]
-			    entryPoint = "https"
-			  [entryPoints.https]
-			  address = ":443"
-			    [entryPoints.https.tls]
-			    minVersion = "VersionTLS12"
-			    cipherSuites = [
-			      "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305",
-			      "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384",
-			      "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256",
-			      "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256",
-			      "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA",
-			      "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA"
-			    ]
-			  [entryPoints.traefik]
-			  address = ":8080"
-
-			[acme]
-			email = "${MAIL}"
-			storage = "/etc/traefik/acme/acme.json"
-			entryPoint = "https"
-			onHostRule = true
-			onDemand = false
-			  [acme.httpChallenge]
-			  entryPoint = "http"
-
-			[docker]
-			endpoint = "unix:///var/run/docker.sock"
-			domain = "${DOMAIN}"
-			watch = true
-			exposedbydefault = false
-			EOF
+			cp /usr/local/bin/dockers/traefik/traefik.toml  ${VOLUMES_TRAEFIK_PATH}/traefik.toml
+			sed -i "s|@MAIL@|$MAIL|g;" ${VOLUMES_TRAEFIK_PATH}/traefik.toml
+			sed -i "s|@DOMAIN@|$DOMAIN|g;" ${VOLUMES_TRAEFIK_PATH}/traefik.toml
 
 			## creation du docker-compose personnalisé dans lequel viendront s'incrémenter les variables du fichier .envt
 			cat <<- EOF > /mnt/docker-compose.yml
@@ -357,8 +323,8 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 			      - traefik.frontend.auth.basic=${VAR}
 			    volumes:
 			      - /var/run/docker.sock:/var/run/docker.sock:ro
-			      - ${VOLUMES_ROOT_PATH}/traefik/traefik.toml:/traefik.toml:ro
-			      - ${VOLUMES_ROOT_PATH}/letsencrypt/certs:/etc/traefik/acme:rw
+			      - ${VOLUMES_TRAEFIK_PATH}/traefik.toml:/traefik.toml:ro
+			      - ${VOLUMES_TRAEFIK_PATH}/certs:/etc/traefik/acme:rw
 			      - /var/log/traefik:/var/log
 			    ports:
 			      - "80:80"

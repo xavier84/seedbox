@@ -14,6 +14,7 @@ LISTAPP="plex pyload medusa rtorrent radarr syncthing jackett lidarr portainer t
 #variables
 BASEDIR="/opt/seedbox-compose"
 BASEDIRDOCKER="/opt/seedbox-compose/dockers"
+VOLUMES_TRAEFIK_PATH="/etc/traefik"
 
 CONFDIR="/etc/seedbox-compose"
 VERSION=$(cat /etc/debian_version)
