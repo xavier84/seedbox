@@ -1,9 +1,6 @@
 #!/bin/bash
 
 
-
-clear
-logo.sh
 while :; do
 . /usr/local/bin/includes/functions.sh
 . /usr/local/bin/includes/variable.sh
@@ -98,108 +95,15 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 			echo -e "${CCYAN}Adresse mail ${CEND}"
 			read -rp "MAIL = " MAIL
 
+			useradd -M -s /bin/bash "$USERNAME"
+			echo "${USERNAME}:${PASSWD}" | chpasswd
+			mkdir -p /home/"$USERNAME"
+			chown -R "$USERNAME":"$USERNAME" /home/"$USERNAME"
 			htpasswd -bs /etc/apache2/.htpasswd "$USERNAME" "$PASSWD"
 			htpasswd -cbs /etc/apache2/.htpasswd_"$USERNAME" "$USERNAME" "$PASSWD"
 			VAR=$(sed -e 's/\$/\$$/g' /etc/apache2/.htpasswd_"$USERNAME" 2>/dev/null)
-			export PASSWD
-
-			echo ""
-			read -rp "Souhaitez vous utiliser Nextcloud ? (o/n) : " EXCLUDE
-			if [[ "$EXCLUDE" = "o" ]] || [[ "$EXCLUDE" = "O" ]]; then
-
-				echo -e "${CGREEN}${CEND}"
-				read -rp "Choisir un mot de passe pour la base de donnée MARIADB = " PASS
-
-				if [ -n "$PASS" ]
-				then
-			 		export PASS
-					echo -e "${CGREEN}Vous devrez lancer nextcloud à partir des applications choix 3${CEND}"
-				fi
-			fi
-
-			clear
-			echo -e "${CCYAN}-------------------------------------------------------------------------------------------------------------------------${CEND}"
-			echo -e "${CGREEN}															  ${CEND}"
-			echo -e "${CGREEN}				LA VARIABLE CI DESSOUS EST DEFINIE PAR DEFAULT SUR L HOTE			  	  ${CEND}"
-			echo -e "${CGREEN}															  ${CEND}"
-			echo -e "${CCYAN}-------------------------------------------------------------------------------------------------------------------------${CEND}"
-			echo -e "${CCYAN}	  ${CPURPLE}VOLUMES_ROOT_PATH:${CRED} Emplacement des volumes sur l'hote:	${CCYAN}/home/$USERNAME	  ${CEND}"
-			echo -e "${CCYAN}-------------------------------------------------------------------------------------------------------------------------${CEND}"
-			echo -e "${CGREEN}															  ${CEND}"
-			echo -e "${CGREEN}				TU PEUX MODIFIER CETTE VARIABLE A TA CONVENANCE						  ${CEND}"
-			echo -e "${CGREEN}															  ${CEND}"
-			echo -e "${CRED}-------------------------------------------------------------------------------------------------------------------------${CEND}"
-			echo -e "${CGREEN}${CEND}"
-
-			# Variables par défault, peuvent être modifiée
 			export VOLUMES_ROOT_PATH=/home/"$USERNAME"
-
-
-			read -rp "Voulez modifier la variable home ci dessus ? (o/n) : " EXCLUDE
-				if [[ "$EXCLUDE" = "o" ]] || [[ "$EXCLUDE" = "O" ]]; then
-
-					echo -e "${CGREEN}${CEND}"
-					echo -e "${CCYAN}Par défault le montage des volumes est dans : /home/$USERNAME ${CEND}"
-					read -rp "VOLUMES_ROOT_PATH = " VOLUMES_ROOT_PATH
-
-						if [ -n "$VOLUMES_ROOT_PATH" ]
-						then
-			 				export VOLUMES_ROOT_PATH
-			 				mkdir -p ${VOLUMES_ROOT_PATH}
-						else
-			 				VOLUMES_ROOT_PATH=/home/"$USERNAME"
-			 				export VOLUMES_ROOT_PATH
-			 				mkdir -p ${VOLUMES_ROOT_PATH}
-						fi
-				else
-					mkdir -p ${VOLUMES_ROOT_PATH}
-				fi
-
-
-			clear
-			echo -e "${CCYAN}-------------------------------------------------------------------------------------------------------------------------${CEND}"
-			echo -e "${CGREEN}															  ${CEND}"
-			echo -e "${CGREEN}				ORGANISATION DES DOSSIERS DE MEDIAS							  ${CEND}"
-			echo -e "${CGREEN}															  ${CEND}"
-			echo -e "${CCYAN}-------------------------------------------------------------------------------------------------------------------------${CEND}"
-			echo -e "${CGREEN}															  ${CEND}"
-			echo -e "${CCYAN}			        exemple: Movies, Shows, Musics, Animes							  ${CEND}"
-			echo -e "${CGREEN}															  ${CEND}"
-			echo -e "${CCYAN}-------------------------------------------------------------------------------------------------------------------------${CEND}"
-
-			## Création des dossiers locaux pour unionfs
-			touch ${VOLUMES_ROOT_PATH}/local.txt
-			read -rp "Taper ok pour démarrer: " EXCLUDE
-			cat <<- EOF > ${VOLUMES_ROOT_PATH}/local.txt
-			EOF
-
-			if [[ "$EXCLUDE" = "ok" ]] || [[ "$EXCLUDE" = "OK" ]]; then
-    			echo -e "${CCYAN}\nTapez le nom des dossiers dans lesquels seront stockés les Medias, à la fin de chaque saisie appuyer sur la touche Entrée et taper ${CPURPLE}STOP${CEND}${CCYAN} si vous avez terminé.\n${CEND}"
-    			while :
-    			do
-        		read -p "" EXCLUDEPATH
-        			if [[ "$EXCLUDEPATH" = "STOP" ]] || [[ "$EXCLUDEPATH" = "stop" ]]; then
-            			break
-        			fi
-        		echo "$EXCLUDEPATH" >> ${VOLUMES_ROOT_PATH}/local.txt
-    			done
-			fi
-
-			while IFS=: read user
-			do
-			mkdir -p ${VOLUMES_ROOT_PATH}/Medias/$user
-			done < ${VOLUMES_ROOT_PATH}/local.txt
-
-			FILMS=$(grep -E 'films|film|Films|FILMS|MOVIES|Movies|movies|movie|VIDEOS|VIDEO|Video|Videos' ${VOLUMES_ROOT_PATH}/local.txt | cut -d: -f2 | cut -d ' ' -f2)
-			SERIES=$(grep -E 'series|TV|tv|Series|SERIES|SERIES TV|Series TV|series tv|serie tv|serie TV|series TV|Shows' ${VOLUMES_ROOT_PATH}/local.txt | cut -d: -f2 | cut -d ' ' -f2-3)
-			ANIMES=$(grep -E 'ANIMES|ANIME|Animes|Anime|Animation|ANIMATION|animes|anime' ${VOLUMES_ROOT_PATH}/local.txt | cut -d: -f2 | cut -d ' ' -f2)
-			MUSIC=$(grep -E 'MUSIC|Music|music|Musiques|Musique|MUSIQUE|MUSIQUES|musiques|musique' ${VOLUMES_ROOT_PATH}/local.txt | cut -d: -f2 | cut -d ' ' -f2)
-
-			export FILMS
-			export SERIES
-			export ANIMES
-			export MUSIC
-			rm ${VOLUMES_ROOT_PATH}/local.txt
+			export PASSWD
 
 			clear
 			echo -e "${CCYAN}-------------------------------------------------------------------------------------------------------------------------${CEND}"
@@ -296,345 +200,30 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 
 			EOF
 
-			## Création d'un fichier traefik.toml
 			docker network create traefik_proxy 2>/dev/null
 			docker network create torrent 2>/dev/null
-			mkdir -p ${VOLUMES_TRAEFIK_PATH}
 
+			mkdir -p ${VOLUMES_TRAEFIK_PATH}
 			cp /usr/local/bin/dockers/traefik/traefik.toml  ${VOLUMES_TRAEFIK_PATH}/traefik.toml
+			cp /usr/local/bin/dockers/traefik/docker-compose.yml ${VOLUMES_TRAEFIK_PATH}/docker-compose.yml
+
 			sed -i "s|@MAIL@|$MAIL|g;" ${VOLUMES_TRAEFIK_PATH}/traefik.toml
 			sed -i "s|@DOMAIN@|$DOMAIN|g;" ${VOLUMES_TRAEFIK_PATH}/traefik.toml
 
-			## creation du docker-compose personnalisé dans lequel viendront s'incrémenter les variables du fichier .envt
-			cat <<- EOF > /mnt/docker-compose.yml
-			version: '3'
-			services:
+			sed -i "s|@TRAEFIK_DASHBOARD_URL@|$VOLUMES_TRAEFIK_PATH|g;" ${VOLUMES_TRAEFIK_PATH}/docker-compose.yml
+			sed -i "s|@PROXY_NETWORK@|$PROXY_NETWORK|g;" ${VOLUMES_TRAEFIK_PATH}/docker-compose.yml
+			sed -i "s|@VAR@|$VAR|g;" ${VOLUMES_TRAEFIK_PATH}/docker-compose.yml
 
-			  traefik:
-			    image: traefik
-			    container_name: traefik
-			    restart: unless-stopped
-			    hostname: traefik
-			    labels:
-			      - traefik.enable=true
-			      - traefik.frontend.rule=Host:${TRAEFIK_DASHBOARD_URL}
-			      - traefik.port=8080
-			      - traefik.docker.network=${PROXY_NETWORK}
-			      - traefik.frontend.auth.basic=${VAR}
-			    volumes:
-			      - /var/run/docker.sock:/var/run/docker.sock:ro
-			      - ${VOLUMES_TRAEFIK_PATH}/traefik.toml:/traefik.toml:ro
-			      - ${VOLUMES_TRAEFIK_PATH}/certs:/etc/traefik/acme:rw
-			      - /var/log/traefik:/var/log
-			    ports:
-			      - "80:80"
-			      - "443:443"
-			    networks:
-			      - proxy
-			    command:
-			      - --web
-			      - --accessLog.filePath=/var/log/access.log
-			      - --accessLog.filters.statusCodes=400-499
 
-			  plex:
-			    container_name: plex
-			    image: plexinc/pms-docker
-			    restart: unless-stopped
-			    hostname: plex
-			    labels:
-			      - traefik.enable=true
-			      - traefik.frontend.rule=Host:${PLEX_FQDN}
-			      - traefik.port=32400
-			      - traefik.docker.network=${PROXY_NETWORK}
-			    environment:
-			      - TZ=Europe/Paris
-			      - PLEX_CLAIM=
-			      - PLEX_UID=0
-			      - PLEX_GID=0
-			    ports:
-			      - 32400:32400
-			    volumes:
-			      - ${VOLUMES_ROOT_PATH}/Medias:/mnt
-			      - ${VOLUMES_ROOT_PATH}/plex/config:/config
-			      - /dev/shm:/transcode
-			    networks:
-			      - proxy
-
-			  lidarr:
-			    container_name: lidarr
-			    image: linuxserver/lidarr
-			    restart: unless-stopped
-			    hostname: lidarr
-			    labels:
-			      - traefik.enable=true
-			      - traefik.frontend.rule=Host:${LIDARR_FQDN}
-			      - traefik.port=8686
-			      - traefik.docker.network=${PROXY_NETWORK}
-			      - traefik.frontend.auth.basic=${VAR}
-			    volumes:
-			      - ${VOLUMES_ROOT_PATH}/Medias/${MUSIC}:/music:rw
-			      - ${VOLUMES_ROOT_PATH}/lidarr/config:/config
-			      - ${VOLUMES_ROOT_PATH}/rutorrent/downloads:/downloads
-			    environment:
-			      - /etc/localtime:/etc/localtime:ro
-			      - TZ=Paris/Europe
-			      - PUID=0
-			      - PGID=0
-			    networks:
-			      - proxy
-
-			  pyload:
-			    container_name: pyload
-			    image: writl/pyload
-			    restart: unless-stopped
-			    hostname: pyload
-			    labels:
-			      - traefik.enable=true
-			      - traefik.frontend.rule=Host:${PYLOAD_FQDN}
-			      - traefik.port=8000
-			      - traefik.docker.network=${PROXY_NETWORK}
-			      - traefik.frontend.auth.basic=${VAR}
-			    environment:
-			      - /etc/localtime:/etc/localtime:ro
-			      - TZ=Paris/Europe
-			      - PUID=0
-			      - PGID=0
-			    volumes:
-			      - ${VOLUMES_ROOT_PATH}/pyload/download:/opt/pyload/Downloads:rw
-			      - ${VOLUMES_ROOT_PATH}/pyload/config:/opt/pyload/pyload-config:rw
-			    networks:
-			      - proxy
-
-			  radarr:
-			    container_name: radarr
-			    image: linuxserver/radarr
-			    restart: unless-stopped
-			    hostname: radarr
-			    labels:
-			      - traefik.enable=true
-			      - traefik.frontend.rule=Host:${RADARR_FQDN}
-			      - traefik.port=7878
-			      - traefik.docker.network=${PROXY_NETWORK}
-			      - traefik.frontend.auth.basic=${VAR}
-			    environment:
-			      - /etc/localtime:/etc/localtime:ro
-			      - TZ=Paris/Europe
-			      - PUID=0
-			      - PGID=0
-			    volumes:
-			      - ${VOLUMES_ROOT_PATH}/radarr/config:/config
-			      - ${VOLUMES_ROOT_PATH}/rutorrent/downloads:/downloads
-			      - ${VOLUMES_ROOT_PATH}/Medias/${FILMS}:/movies
-			    networks:
-			      - proxy
-
-			  syncthing:
-			    image: linuxserver/syncthing
-			    container_name: syncthing
-			    restart: unless-stopped
-			    hostname: watcher
-			    labels:
-			      - traefik.enable=true
-			      - traefik.frontend.rule=Host:${SYNCTHING_FQDN}
-			      - traefik.port=8384
-			      - traefik.docker.network=${PROXY_NETWORK}
-			      - traefik.frontend.auth.basic=${VAR}
-			    volumes:
-			      - ${VOLUMES_ROOT_PATH}/syncthing/config:/config
-			      - ${VOLUMES_ROOT_PATH}/syncthing/data:/mnt/data
-			    ports:
-			      - 22000:22000
-			      - 21027:21027/udp
-			    environment:
-			      - UMASK_SET=022
-			      - /etc/localtime:/etc/localtime:ro
-			      - TZ=Paris/Europe
-			      - PUID=0
-			      - PGID=0
-			    networks:
-			      - proxy
-
-			  medusa:
-			    image: linuxserver/medusa
-			    container_name: medusa
-			    restart: unless-stopped
-			    hostname: medusa
-			    labels:
-			      - traefik.enable=true
-			      - traefik.frontend.rule=Host:${MEDUSA_FQDN}
-			      - traefik.port=8081
-			      - traefik.docker.network=${PROXY_NETWORK}
-			      - traefik.frontend.auth.basic=${VAR}
-			    volumes:
-			      - ${VOLUMES_ROOT_PATH}/Medias/${SERIES}:/tv
-			      - ${VOLUMES_ROOT_PATH}/rutorrent/downloads:/downloads
-			      - ${VOLUMES_ROOT_PATH}/medusa/config:/config
-			    environment:
-			      - /etc/localtime:/etc/localtime:ro
-			      - TZ=Paris/Europe
-			      - PUID=0
-			      - PGID=0
-			    networks:
-			      - proxy
-
-			  torrent:
-			    container_name: torrent
-			    image: xataz/rtorrent-rutorrent:filebot
-			    restart: unless-stopped
-			    hostname: torrent
-			    labels:
-			      - traefik.enable=true
-			      - traefik.frontend.rule=Host:${RTORRENT_FQDN}
-			      - traefik.port=8080
-			      - traefik.docker.network=${PROXY_NETWORK}
-			      - traefik.frontend.auth.basic=${VAR}
-			    environment:
-			      - FILEBOT_RENAME_METHOD=copy
-			      - FILEBOT_RENAME_MOVIES={n} ({y})/{n} ({y})
-			      - FILEBOT_RENAME_SERIES={n}/Saison {s}/{n} - {s00e00} - {t}
-			      - UID=1001
-			      - GID=1001
-			      - DHT_RTORRENT=on
-			      - PORT_RTORRENT=6881
-			    volumes:
-			      - ${VOLUMES_ROOT_PATH}/rutorrent/downloads:/data/torrents
-			      - ${VOLUMES_ROOT_PATH}/Medias:/data/Media
-			      - ${VOLUMES_ROOT_PATH}/rutorrent/data:/data
-			      - ${VOLUMES_ROOT_PATH}/rutorrent/config:/config
-			    networks:
-			      - torrent
-			      - proxy
-
-			  jackett:
-			    container_name: jackett
-			    image: xataz/jackett
-			    restart: unless-stopped
-			    hostname: jackett
-			    labels:
-			      - traefik.enable=true
-			      - traefik.frontend.rule=Host:${JACKETT_FQDN}
-			      - traefik.port=9117
-			      - traefik.docker.network=${PROXY_NETWORK}
-			      - traefik.frontend.auth.basic=${VAR}
-			    environment:
-			      - TZ=Paris/Europe
-			      - PUID=0
-			      - PGID=0
-			    volumes:
-			      - ${VOLUMES_ROOT_PATH}/Jackett/config:/config
-			      - ${VOLUMES_ROOT_PATH}/Jackett/downloads:/downloads
-			    networks:
-			      - proxy
-
-			  portainer:
-			    container_name: portainer
-			    image: portainer/portainer
-			    restart: unless-stopped
-			    hostname: portainer
-			    labels:
-			      - traefik.enable=true
-			      - traefik.frontend.rule=Host:${PORTAINER_FQDN}
-			      - traefik.port=9000
-			      - traefik.docker.network=${PROXY_NETWORK}
-			    volumes:
-			      - ${VOLUMES_ROOT_PATH}/portainer/data:/data
-			      - /var/run/docker.sock:/var/run/docker.sock
-			    networks:
-			      - proxy
-
-			  tautulli:
-			    container_name: tautulli
-			    image: tautulli/tautulli
-			    restart: unless-stopped
-			    hostname: tautulli
-			    labels:
-			      - traefik.enable=true
-			      - traefik.frontend.rule=Host:${TAUTULLI_FQDN}
-			      - traefik.port=8181
-			      - traefik.docker.network=${PROXY_NETWORK}
-			      - traefik.frontend.auth.basic=${VAR}
-			    environment:
-			      - TZ=Paris/Europe
-			      - PUID=0
-			      - PGID=0
-			    volumes:
-			      - ${VOLUMES_ROOT_PATH}/tautulli/config:/config
-			      - ${VOLUMES_ROOT_PATH}/plex/config/Library/Application Support/Plex Media Server/Logs:/logs:ro
-			    networks:
-			      - proxy
-
-			  heimdall:
-			    container_name: heimdall
-			    image: linuxserver/heimdall
-			    restart: unless-stopped
-			    hostname: heimdall
-			    labels:
-			      - traefik.enable=true
-			      - traefik.frontend.rule=Host:${HEIMDALL_FQDN}
-			      - traefik.port=443
-			      - traefik.docker.network=${PROXY_NETWORK}
-			      - traefik.frontend.auth.basic=${VAR}
-			      - traefik.protocol=https
-			    environment:
-			      - TZ=Paris/Europe
-			      - PUID=1001
-			      - PGID=1001
-			    volumes:
-			      - ${VOLUMES_ROOT_PATH}/heimdall/config:/config
-			    networks:
-			      - proxy
-
-			  nextcloud:
-			    container_name: nextcloud
-			    image: nextcloud
-			    volumes:
-			      - ${VOLUMES_ROOT_PATH}/nextcloud:/var/www/html
-			    labels:
-			      - traefik.backend=nextcloud
-			      - traefik.port=80
-			      - traefik.frontend.rule=Host:${NEXTCLOUD_FQDN}
-			      - traefik.enable=true
-			      - traefik.docker.network=traefik_proxy
-			      - traefik.frontend.auth.basic=${VAR}
-			    depends_on:
-			      - mariadb
-			    networks:
-			      - proxy
-			      - internal
-
-			  mariadb:
-			    image: mariadb
-			    container_name: mariadb
-			    environment:
-			      - MYSQL_USER=nextcloud
-			      - MYSQL_PASSWORD=${PASS}
-			      - MYSQL_DATABASE=nextcloud
-			      - MYSQL_RANDOM_ROOT_PASSWORD=yes
-			    volumes:
-			      - ${VOLUMES_ROOT_PATH}/mariadb:/var/lib/mysql
-			    networks:
-			      - internal
-			    labels:
-			      - traefik.enable=false
-
-			networks:
-			  torrent:
-			  proxy:
-			    external:
-			      name: ${PROXY_NETWORK}
-			  internal:
-			    external: false
-			EOF
 
 			clear
 			echo -e "${CCYAN}-------------------------------------------------------------------------------------------------------------------------${CEND}"
-			echo -e "${CCYAN}					VERIFICATION DE LA CONFORMITE DU DOCKER-COMPOSE					  ${CEND}"
+			echo -e "${CCYAN}					VERIFICATION ET MISE EN ROUTE DE TRAEFIK				  ${CEND}"
 			echo -e "${CCYAN}-------------------------------------------------------------------------------------------------------------------------${CEND}"
-			read -p "Appuyer sur la touche Entrer pour continuer"
-			nano /mnt/docker-compose.yml
+			echo ""
+			echo ""
 			progress-bar 20
-			cd /mnt
-			docker-compose up -d traefik 2>/dev/null
+			docker-compose -f ${VOLUMES_TRAEFIK_PATH}/docker-compose.yml up -d
 			echo ""
 			echo -e "${CCYAN}La configuration des variables s'est parfaitement déroulée ${CEND}"
 			echo ""
