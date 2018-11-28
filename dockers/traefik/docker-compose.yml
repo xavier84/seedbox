@@ -14,8 +14,8 @@ services:
       - traefik.frontend.auth.basic=@VAR@
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ${VOLUMES_TRAEFIK_PATH}/traefik.toml:/traefik.toml:ro
-      - ${VOLUMES_TRAEFIK_PATH}/certs:/etc/traefik/acme:rw
+      - @VOLUMES_TRAEFIK_PATH@/traefik.toml:/traefik.toml:ro
+      - @VOLUMES_TRAEFIK_PATH@/certs:/etc/traefik/acme:rw
       - /var/log/traefik:/var/log
     ports:
       - "80:80"

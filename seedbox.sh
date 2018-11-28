@@ -20,6 +20,7 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 
 	case $PORT_CHOICE in
 		1) ## Installation de docker et docker-compose
+			clear
 			logo.sh
 			echo -e "${CGREEN}-------------------------------------------------------------------------------------------------------------------------${CEND}"
 			echo -e "${CCYAN}					INSTALLATION DOCKER ET DOCKER-COMPOSE						   ${CEND}"
@@ -90,7 +91,6 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 			echo -e "${CCYAN}Mot de passe pour l'authentification WEB ${CEND}"
 			read -rp "PASSWD = " PASSWD
 
-
 			echo ""
 			echo -e "${CCYAN}Adresse mail ${CEND}"
 			read -rp "MAIL = " MAIL
@@ -104,6 +104,7 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 			VAR=$(sed -e 's/\$/\$$/g' /etc/apache2/.htpasswd_"$USERNAME" 2>/dev/null)
 			export VOLUMES_ROOT_PATH=/home/"$USERNAME"
 			export PASSWD
+			progress-bar 10
 
 			clear
 			echo -e "${CCYAN}-------------------------------------------------------------------------------------------------------------------------${CEND}"
@@ -200,9 +201,6 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 
 			EOF
 
-			docker network create traefik_proxy 2>/dev/null
-			docker network create torrent 2>/dev/null
-
 			mkdir -p ${VOLUMES_TRAEFIK_PATH}
 			cp /usr/local/bin/dockers/traefik/traefik.toml  ${VOLUMES_TRAEFIK_PATH}/traefik.toml
 			cp /usr/local/bin/dockers/traefik/docker-compose.yml ${VOLUMES_TRAEFIK_PATH}/docker-compose.yml
@@ -210,7 +208,8 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 			sed -i "s|@MAIL@|$MAIL|g;" ${VOLUMES_TRAEFIK_PATH}/traefik.toml
 			sed -i "s|@DOMAIN@|$DOMAIN|g;" ${VOLUMES_TRAEFIK_PATH}/traefik.toml
 
-			sed -i "s|@TRAEFIK_DASHBOARD_URL@|$VOLUMES_TRAEFIK_PATH|g;" ${VOLUMES_TRAEFIK_PATH}/docker-compose.yml
+			sed -i "s|@TRAEFIK_DASHBOARD_URL@|$TRAEFIK_DASHBOARD_URL|g;" ${VOLUMES_TRAEFIK_PATH}/docker-compose.yml
+			sed -i "s|@VOLUMES_TRAEFIK_PATH@|$VOLUMES_TRAEFIK_PATH|g;" ${VOLUMES_TRAEFIK_PATH}/docker-compose.yml
 			sed -i "s|@PROXY_NETWORK@|$PROXY_NETWORK|g;" ${VOLUMES_TRAEFIK_PATH}/docker-compose.yml
 			sed -i "s|@VAR@|$VAR|g;" ${VOLUMES_TRAEFIK_PATH}/docker-compose.yml
 
@@ -223,6 +222,7 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 			echo ""
 			echo ""
 			progress-bar 20
+			docker network create traefik_proxy
 			docker-compose -f ${VOLUMES_TRAEFIK_PATH}/docker-compose.yml up -d
 			echo ""
 			echo -e "${CCYAN}La configuration des variables s'est parfaitement déroulée ${CEND}"
