@@ -172,7 +172,7 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 			export PROXY_NETWORK=traefik_proxy
 			## Création d'un fichier .env
 
-			cat <<- EOF > /mnt/.env
+			cat <<- EOF > /home/"$USERNAME"/.env
 			FILMS=$FILMS
 			SERIES=$SERIES
 			ANIMES=$ANIMES
@@ -202,6 +202,8 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 			EOF
 
 			mkdir -p ${VOLUMES_TRAEFIK_PATH}
+			mkdir -p /var/www
+			cp -R /usr/local/bin/dockers/traefik/html /var/www/
 			cp /usr/local/bin/dockers/traefik/traefik.toml  ${VOLUMES_TRAEFIK_PATH}/traefik.toml
 			cp /usr/local/bin/dockers/traefik/docker-compose.yml ${VOLUMES_TRAEFIK_PATH}/docker-compose.yml
 
@@ -211,7 +213,9 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 			sed -i "s|@TRAEFIK_DASHBOARD_URL@|$TRAEFIK_DASHBOARD_URL|g;" ${VOLUMES_TRAEFIK_PATH}/docker-compose.yml
 			sed -i "s|@VOLUMES_TRAEFIK_PATH@|$VOLUMES_TRAEFIK_PATH|g;" ${VOLUMES_TRAEFIK_PATH}/docker-compose.yml
 			sed -i "s|@PROXY_NETWORK@|$PROXY_NETWORK|g;" ${VOLUMES_TRAEFIK_PATH}/docker-compose.yml
+			sed -i "s|@DOMAIN@|$DOMAIN|g;" ${VOLUMES_TRAEFIK_PATH}/docker-compose.yml
 			sed -i "s|@VAR@|$VAR|g;" ${VOLUMES_TRAEFIK_PATH}/docker-compose.yml
+
 
 
 
@@ -235,7 +239,10 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 		3)
 			clear
 			logo.sh
-			export $(xargs </mnt/.env)
+			echo  ""
+			echo -e "${CCYAN}Nom d'utilisateur pour les applications ${CEND}"
+			read -rp "USERNAME = " USERNAME
+			export $(xargs </home/"$USERNAME"/.env)
 			cd /mnt
 			APPLI=""
 			sortir=false
@@ -306,7 +313,7 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 					clear
 					logo.sh
 				else
-					export $(xargs </mnt/.env)
+					export $(xargs </home/"$USERNAME"/.env)
 					docker-compose up -d torrent
 					progress-bar 20
 					echo ""
@@ -601,7 +608,7 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 				;;
 
 				2) # Changer l'identification des applis docker
-				export $(xargs </mnt/.env)
+				export $(xargs </home/"$USERNAME"/.env)
 				clear
 				logo.sh
 				echo ""
@@ -643,7 +650,7 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 				3) # Modification du port ssh et mise en place serveur mail
 
 				## Configuration postfix pour les mails
-				export $(xargs </mnt/.env)
+				export $(xargs </home/"$USERNAME"/.env)
 				HOST=$(hostname)
 				IP=$(curl ifconfig.me)
 				echo "$IP" "$HOST.$DOMAIN" "$HOST" >> /etc/hosts
@@ -752,7 +759,7 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 				echo -e "${CCYAN}    Installation Fail2ban, Portsentry, Iptables	 ${CEND}"
 				echo -e "${CRED}---------------------------------------------------------${CEND}"
 				read -p "Appuyer sur la touche Entrer pour continuer"
-				export $(xargs </mnt/.env)
+				export $(xargs </home/"$USERNAME"/.env)
 				apt install fail2ban portsentry -y
 				echo ""
 				read -rp "Quel est votre port ssh ? " PORT
@@ -915,17 +922,17 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 				clear
 				logo.sh
 				echo ""
-				export $(xargs </mnt/.env)
+				export $(xargs </home/"$USERNAME"/.env)
 				read -rp  "Préciser l'emplacement où vous souhaitez conserver la sauvegarde (exemple: /mnt/sauve): " EXCLUDE
 				mkdir -p $EXCLUDE
 				echo ""
 				read -rp  "Nom que vous souhaitez attribuer à votre sauvegarde (exemple: backup): " SAUVE
 				cd /
 				ARCHIVE=$EXCLUDE/$SAUVE
-				cat <<- EOF >> /mnt/.env
+				cat <<- EOF >> /home/"$USERNAME"/.env
 				ARCHIVE=$ARCHIVE
 				EOF
-				tar -zcf $EXCLUDE/$SAUVE.gz --exclude=Medias ${VOLUMES_ROOT_PATH} /mnt/docker-compose.yml /mnt/.env 2>/dev/null
+				tar -zcf $EXCLUDE/$SAUVE.gz --exclude=Medias ${VOLUMES_ROOT_PATH} /mnt/docker-compose.yml /home/"$USERNAME"/.env 2>/dev/null
 				echo ""
 				progress-bar 20
 				echo ""
