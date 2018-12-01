@@ -288,7 +288,7 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 
 					if [ -n "$CLAIM" ]
 					then
-						sed -i -e "s/PLEX_CLAIM=/PLEX_CLAIM=${CLAIM}/g" /mnt/docker-compose.yml
+						sed -i -e "s/PLEX_CLAIM=/PLEX_CLAIM=${CLAIM}/g" /home/"$USERNAME"/docker-compose.yml
 					fi
 
 					## Lancement de Plex
@@ -617,7 +617,7 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 				read -rp "Taper le nom de l'utilisateur " USER
 				PASSWD=$(htpasswd -c /etc/apache2/.htpasswd $USER 2>/dev/null)
 				PASSWD=$(sed -e 's/\$/\$$/g' /etc/apache2/.htpasswd 2>/dev/null)
-				sed -i -e "s|traefik.frontend.auth.basic=.*|traefik.frontend.auth.basic=$PASSWD|g" /mnt/docker-compose.yml
+				sed -i -e "s|traefik.frontend.auth.basic=.*|traefik.frontend.auth.basic=$PASSWD|g" /home/"$USERNAME"/docker-compose.yml
 
 				# On relance les containers actifs pour prendre en compte les modifs apportées au docker-compose && recréation de la configuration filebot
 				cd /mnt
@@ -932,7 +932,7 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 				cat <<- EOF >> /home/"$USERNAME"/.env
 				ARCHIVE=$ARCHIVE
 				EOF
-				tar -zcf $EXCLUDE/$SAUVE.gz --exclude=Medias ${VOLUMES_ROOT_PATH} /mnt/docker-compose.yml /home/"$USERNAME"/.env 2>/dev/null
+				tar -zcf $EXCLUDE/$SAUVE.gz --exclude=Medias ${VOLUMES_ROOT_PATH} /home/"$USERNAME"/docker-compose.yml /home/"$USERNAME"/.env 2>/dev/null
 				echo ""
 				progress-bar 20
 				echo ""
