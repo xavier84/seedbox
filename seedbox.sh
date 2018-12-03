@@ -232,7 +232,6 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 			echo -e "${CCYAN}La configuration des variables s'est parfaitement déroulée ${CEND}"
 			echo ""
 			read -p "Appuyer sur la touche Entrer pour continuer"
-			seedbox.sh
 		;;
 
 
@@ -243,6 +242,11 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 			echo -e "${CCYAN}Nom d'utilisateur pour les applications ${CEND}"
 			read -rp "USERNAME = " USERNAME
 			export $(xargs </home/"$USERNAME"/.env)
+
+			if [ ! -f /home/"$USERNAME"/docker-compose.yml ]; then
+				cp /usr/local/bin/dockers/docker-compose.yml /home/"$USERNAME"/docker-compose.yml
+				sed_docker /home/"$USERNAME"/docker-compose.yml
+			fi
 			cd /mnt
 			APPLI=""
 			sortir=false
@@ -306,7 +310,7 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 				;;
 
 				2)
-				if docker ps -a | grep -q torrent; then
+				if docker ps -a | grep -q torrent-$USERNAME; then
 					echo -e "${CGREEN}rtorrent est déjà lancé${CEND}"
 					echo ""
 					read -p "Appuyer sur la touche Entrer pour retourner au menu"
@@ -314,25 +318,25 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 					logo.sh
 				else
 					export $(xargs </home/"$USERNAME"/.env)
-					docker-compose up -d torrent
+					docker-compose -f /home/"$USERNAME"/docker-compose.yml up -d torrent-$USERNAME
 					progress-bar 20
 					echo ""
 					echo -e "${CGREEN}Installation de Rtorrent réussie${CEND}"
 					echo ""
 
 					# Configuration pour le téléchargement en manuel avec filebot
-					docker exec -t torrent rm -rf /data/Media/*
+					docker exec -t torrent-$USERNAME rm -rf /data/Media/*
 					rm -rf $VOLUMES_ROOT_PATH/Medias/*
-					docker exec -t torrent mkdir -p /data/Media/${FILMS}
-					docker exec -t torrent mkdir -p /data/Media/${SERIES}
-					docker exec -t torrent mkdir -p /data/Media/${MUSIC}
-					docker exec -t torrent mkdir -p /data/Media/${ANIMES}
-					docker exec -t torrent sed -i -e "s/Movies/${FILMS}/g" /usr/local/bin/postdl
-					docker exec -t torrent sed -i -e "s/TV/${SERIES}/g" /usr/local/bin/postdl
-					docker exec -t torrent sed -i -e "s/Music/${MUSIC}/g" /usr/local/bin/postdl
-					docker exec -t torrent sed -i -e "s/Animes/${ANIMES}/g" /usr/local/bin/postdl
-					docker exec -t torrent sed -i '/*)/,/;;/d' /usr/local/bin/postdl
-					docker exec -t torrent chown -R 1001:1001 /mnt
+					docker exec -t torrent-$USERNAME mkdir -p /data/Media/${FILMS}
+					docker exec -t torrent-$USERNAME mkdir -p /data/Media/${SERIES}
+					docker exec -t torrent-$USERNAME mkdir -p /data/Media/${MUSIC}
+					docker exec -t torrent-$USERNAME mkdir -p /data/Media/${ANIMES}
+					docker exec -t torrent-$USERNAME sed -i -e "s/Movies/${FILMS}/g" /usr/local/bin/postdl
+					docker exec -t torrent-$USERNAME sed -i -e "s/TV/${SERIES}/g" /usr/local/bin/postdl
+					docker exec -t torrent-$USERNAME sed -i -e "s/Music/${MUSIC}/g" /usr/local/bin/postdl
+					docker exec -t torrent-$USERNAME sed -i -e "s/Animes/${ANIMES}/g" /usr/local/bin/postdl
+					docker exec -t torrent-$USERNAME sed -i '/*)/,/;;/d' /usr/local/bin/postdl
+					docker exec -t torrent-$USERNAME chown -R 1001:1001 /mnt
 					read -p "Appuyer sur la touche Entrer pour continuer"
 					clear
 					logo.sh

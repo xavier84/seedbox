@@ -1,42 +1,16 @@
 version: '3'
 services:
 
-  traefik:
-    image: traefik
-    container_name: traefik
-    restart: unless-stopped
-    hostname: traefik
-    labels:
-      - traefik.enable=true
-      - traefik.frontend.rule=Host:
-      - traefik.port=8080
-      - traefik.docker.network=
-      - traefik.frontend.auth.basic=
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - /traefik.toml:/traefik.toml:ro
-      - /certs:/etc/traefik/acme:rw
-      - /var/log/traefik:/var/log
-    ports:
-      - "80:80"
-      - "443:443"
-    networks:
-      - proxy
-    command:
-      - --web
-      - --accessLog.filePath=/var/log/access.log
-      - --accessLog.filters.statusCodes=400-499
-
-  plex:
-    container_name: plex
+  plex-@USERNAME@:
+    container_name: plex-@USERNAME@
     image: plexinc/pms-docker
     restart: unless-stopped
     hostname: plex
     labels:
       - traefik.enable=true
-      - traefik.frontend.rule=Host:
+      - traefik.frontend.rule=Host:@PLEX_FQDN@
       - traefik.port=32400
-      - traefik.docker.network=
+      - traefik.docker.network=@PROXY_NETWORK@
     environment:
       - TZ=Europe/Paris
       - PLEX_CLAIM=
@@ -45,27 +19,27 @@ services:
     ports:
       - 32400:32400
     volumes:
-      - /Medias:/mnt
-      - /plex/config:/config
+      - @VOLUMES_ROOT_PATH@/Medias:/mnt
+      - @VOLUMES_ROOT_PATH@/plex/config:/config
       - /dev/shm:/transcode
     networks:
       - proxy
 
-  lidarr:
-    container_name: lidarr
+  lidarr-@USERNAME@:
+    container_name: lidarr-@USERNAME@
     image: linuxserver/lidarr
     restart: unless-stopped
     hostname: lidarr
     labels:
       - traefik.enable=true
-      - traefik.frontend.rule=Host:
+      - traefik.frontend.rule=Host:@LIDARR_FQDN@
       - traefik.port=8686
-      - traefik.docker.network=
-      - traefik.frontend.auth.basic=
+      - traefik.docker.network=@PROXY_NETWORK@
+      - traefik.frontend.auth.basic=@VAR@
     volumes:
-      - /Medias/:/music:rw
-      - /lidarr/config:/config
-      - /rutorrent/downloads:/downloads
+      - @VOLUMES_ROOT_PATH@/Medias/@MUSIC@:/music:rw
+      - @VOLUMES_ROOT_PATH@/lidarr/config:/config
+      - @VOLUMES_ROOT_PATH@/rutorrent/downloads:/downloads
     environment:
       - /etc/localtime:/etc/localtime:ro
       - TZ=Paris/Europe
@@ -74,65 +48,65 @@ services:
     networks:
       - proxy
 
-  pyload:
-    container_name: pyload
+  pyload-@USERNAME@:
+    container_name: pyload-@USERNAME@
     image: writl/pyload
     restart: unless-stopped
     hostname: pyload
     labels:
       - traefik.enable=true
-      - traefik.frontend.rule=Host:
+      - traefik.frontend.rule=Host:@PYLOAD_FQDN@
       - traefik.port=8000
-      - traefik.docker.network=
-      - traefik.frontend.auth.basic=
+      - traefik.docker.network=@PROXY_NETWORK@
+      - traefik.frontend.auth.basic=@VAR@
     environment:
       - /etc/localtime:/etc/localtime:ro
       - TZ=Paris/Europe
       - PUID=0
       - PGID=0
     volumes:
-      - /pyload/download:/opt/pyload/Downloads:rw
-      - /pyload/config:/opt/pyload/pyload-config:rw
+      - @VOLUMES_ROOT_PATH@/pyload/download:/opt/pyload/Downloads:rw
+      - @VOLUMES_ROOT_PATH@/pyload/config:/opt/pyload/pyload-config:rw
     networks:
       - proxy
 
-  radarr:
-    container_name: radarr
+  radarr-@USERNAME@:
+    container_name: radarr-@USERNAME@
     image: linuxserver/radarr
     restart: unless-stopped
     hostname: radarr
     labels:
       - traefik.enable=true
-      - traefik.frontend.rule=Host:
+      - traefik.frontend.rule=Host:@RADARR_FQDN@
       - traefik.port=7878
-      - traefik.docker.network=
-      - traefik.frontend.auth.basic=
+      - traefik.docker.network=@PROXY_NETWORK@
+      - traefik.frontend.auth.basic=@VAR@
     environment:
       - /etc/localtime:/etc/localtime:ro
       - TZ=Paris/Europe
       - PUID=0
       - PGID=0
     volumes:
-      - /radarr/config:/config
-      - /rutorrent/downloads:/downloads
-      - /Medias/:/movies
+      - @VOLUMES_ROOT_PATH@/radarr/config:/config
+      - @VOLUMES_ROOT_PATH@/rutorrent/downloads:/downloads
+      - @VOLUMES_ROOT_PATH@/Medias/:/movies
     networks:
       - proxy
 
-  syncthing:
+  syncthing-@USERNAME@:
     image: linuxserver/syncthing
-    container_name: syncthing
+    container_name: syncthing-@USERNAME@
     restart: unless-stopped
     hostname: watcher
     labels:
       - traefik.enable=true
-      - traefik.frontend.rule=Host:
+      - traefik.frontend.rule=Host:@SYNCTHING_FQDN@
       - traefik.port=8384
-      - traefik.docker.network=
-      - traefik.frontend.auth.basic=
+      - traefik.docker.network=@PROXY_NETWORK@
+      - traefik.frontend.auth.basic=@VAR@
     volumes:
-      - /syncthing/config:/config
-      - /syncthing/data:/mnt/data
+      - @VOLUMES_ROOT_PATH@/syncthing/config:/config
+      - @VOLUMES_ROOT_PATH@/syncthing/data:/mnt/data
     ports:
       - 22000:22000
       - 21027:21027/udp
@@ -145,21 +119,21 @@ services:
     networks:
       - proxy
 
-  medusa:
+  medusa-@USERNAME@:
     image: linuxserver/medusa
-    container_name: medusa
+    container_name: medusa-@USERNAME@
     restart: unless-stopped
     hostname: medusa
     labels:
       - traefik.enable=true
-      - traefik.frontend.rule=Host:
+      - traefik.frontend.rule=Host:@MEDUSA_FQDN@
       - traefik.port=8081
       - traefik.docker.network=
-      - traefik.frontend.auth.basic=
+      - traefik.frontend.auth.basic=@VAR@
     volumes:
-      - /Medias/:/tv
-      - /rutorrent/downloads:/downloads
-      - /medusa/config:/config
+      - @VOLUMES_ROOT_PATH@/Medias/@SERIES@:/tv
+      - @VOLUMES_ROOT_PATH@/rutorrent/downloads:/downloads
+      - @VOLUMES_ROOT_PATH@/medusa/config:/config
     environment:
       - /etc/localtime:/etc/localtime:ro
       - TZ=Paris/Europe
@@ -168,17 +142,17 @@ services:
     networks:
       - proxy
 
-  torrent:
-    container_name: torrent
+  torrent-@USERNAME@:
+    container_name: torrent-@USERNAME@
     image: xataz/rtorrent-rutorrent:filebot
     restart: unless-stopped
     hostname: torrent
     labels:
       - traefik.enable=true
-      - traefik.frontend.rule=Host:
+      - traefik.frontend.rule=Host:@RTORRENT_FQDN@
       - traefik.port=8080
-      - traefik.docker.network=
-      - traefik.frontend.auth.basic=
+      - traefik.docker.network=@PROXY_NETWORK@
+      - traefik.frontend.auth.basic=@VAR@
     environment:
       - FILEBOT_RENAME_METHOD=copy
       - FILEBOT_RENAME_MOVIES={n} ({y})/{n} ({y})
@@ -188,121 +162,121 @@ services:
       - DHT_RTORRENT=on
       - PORT_RTORRENT=6881
     volumes:
-      - /rutorrent/downloads:/data/torrents
-      - /Medias:/data/Media
-      - /rutorrent/data:/data
-      - /rutorrent/config:/config
+      - @VOLUMES_ROOT_PATH@/rutorrent/downloads:/data/torrents
+      - @VOLUMES_ROOT_PATH@/Medias:/data/Media
+      - @VOLUMES_ROOT_PATH@/rutorrent/data:/data
+      - @VOLUMES_ROOT_PATH@/rutorrent/config:/config
     networks:
       - torrent
       - proxy
 
-  jackett:
-    container_name: jackett
+  jackett-@USERNAME@:
+    container_name: jackett-@USERNAME@
     image: xataz/jackett
     restart: unless-stopped
     hostname: jackett
     labels:
       - traefik.enable=true
-      - traefik.frontend.rule=Host:
+      - traefik.frontend.rule=Host:@JACKETT_FQDN@
       - traefik.port=9117
-      - traefik.docker.network=
-      - traefik.frontend.auth.basic=
+      - traefik.docker.network=@PROXY_NETWORK@
+      - traefik.frontend.auth.basic=@VAR@
     environment:
       - TZ=Paris/Europe
       - PUID=0
       - PGID=0
     volumes:
-      - /Jackett/config:/config
-      - /Jackett/downloads:/downloads
+      - @VOLUMES_ROOT_PATH@/Jackett/config:/config
+      - @VOLUMES_ROOT_PATH@/Jackett/downloads:/downloads
     networks:
       - proxy
 
-  portainer:
-    container_name: portainer
+  portainer-@USERNAME@:
+    container_name: portainer-@USERNAME@
     image: portainer/portainer
     restart: unless-stopped
     hostname: portainer
     labels:
       - traefik.enable=true
-      - traefik.frontend.rule=Host:
+      - traefik.frontend.rule=Host:@PORTAINER_FQDN@
       - traefik.port=9000
-      - traefik.docker.network=
+      - traefik.docker.network=@PROXY_NETWORK@
     volumes:
-      - /portainer/data:/data
+      - @VOLUMES_ROOT_PATH@/portainer/data:/data
       - /var/run/docker.sock:/var/run/docker.sock
     networks:
       - proxy
 
-  tautulli:
-    container_name: tautulli
+  tautulli-@USERNAME@:
+    container_name: tautulli-@USERNAME@
     image: tautulli/tautulli
     restart: unless-stopped
     hostname: tautulli
     labels:
       - traefik.enable=true
-      - traefik.frontend.rule=Host:
+      - traefik.frontend.rule=Host:@TAUTULLI_FQDN@
       - traefik.port=8181
-      - traefik.docker.network=
-      - traefik.frontend.auth.basic=
+      - traefik.docker.network=@PROXY_NETWORK@
+      - traefik.frontend.auth.basic=@VAR@
     environment:
       - TZ=Paris/Europe
       - PUID=0
       - PGID=0
     volumes:
-      - /tautulli/config:/config
-      - /plex/config/Library/Application Support/Plex Media Server/Logs:/logs:ro
+      - @VOLUMES_ROOT_PATH@/tautulli/config:/config
+      - @VOLUMES_ROOT_PATH@/plex/config/Library/Application Support/Plex Media Server/Logs:/logs:ro
     networks:
       - proxy
 
-  heimdall:
-    container_name: heimdall
+  heimdall-@USERNAME@:
+    container_name: heimdall-@USERNAME@
     image: linuxserver/heimdall
     restart: unless-stopped
     hostname: heimdall
     labels:
       - traefik.enable=true
-      - traefik.frontend.rule=Host:
+      - traefik.frontend.rule=Host:@HEIMDALL_FQDN@
       - traefik.port=443
-      - traefik.docker.network=
-      - traefik.frontend.auth.basic=
+      - traefik.docker.network=@PROXY_NETWORK@
+      - traefik.frontend.auth.basic=@VAR@
       - traefik.protocol=https
     environment:
       - TZ=Paris/Europe
       - PUID=1001
       - PGID=1001
     volumes:
-      - /heimdall/config:/config
+      - @VOLUMES_ROOT_PATH@/heimdall/config:/config
     networks:
       - proxy
 
-  nextcloud:
-    container_name: nextcloud
+  nextcloud-@USERNAME@:
+    container_name: nextcloud-@USERNAME@
     image: nextcloud
     volumes:
-      - /nextcloud:/var/www/html
+      - @VOLUMES_ROOT_PATH@/nextcloud:/var/www/html
     labels:
       - traefik.backend=nextcloud
       - traefik.port=80
-      - traefik.frontend.rule=Host:
+      - traefik.frontend.rule=Host:@NEXTCLOUD_FQDN@
       - traefik.enable=true
-      - traefik.docker.network=traefik_proxy
-      - traefik.frontend.auth.basic=
+      - traefik.docker.network=@PROXY_NETWORK@
+      - traefik.frontend.auth.basic=@VAR@
     depends_on:
-      - mariadb
+      - mariadb-@USERNAME@
     networks:
       - proxy
       - internal
 
-  mariadb:
+  mariadb-@USERNAME@:
     image: mariadb
-    container_name: mariadb
+    container_name: mariadb-@USERNAME@
     environment:
       - MYSQL_USER=nextcloud
-      - MYSQL_PASSWORD=
+      - MYSQL_PASSWORD=@PASS@
       - MYSQL_DATABASE=nextcloud
       - MYSQL_RANDOM_ROOT_PASSWORD=yes
     volumes:
-      - /mariadb:/var/lib/mysql
+      - @VOLUMES_ROOT_PATH@/mariadb:/var/lib/mysql
     networks:
       - internal
     labels:
@@ -312,6 +286,6 @@ networks:
   torrent:
   proxy:
     external:
-      name:
+      name: @PROXY_NETWORK@
   internal:
     external: false
