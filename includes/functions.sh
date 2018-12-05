@@ -67,6 +67,18 @@ calcul_port () {
 	PORT1=$(( $(($2))+HISTO ))
 }
 
+add_cont () {
+	HISTO=$(wc -l < "$CONFDIR"/ports.txt)
+	PORT=$(( $(($1))+HISTO ))
+	PORT1=$(( $(($2))+HISTO ))
+}
+
+del_cont () {
+	HISTO=$(wc -l < "$CONFDIR"/ports.txt)
+	PORT=$(( $(($1))+HISTO ))
+	PORT1=$(( $(($2))+HISTO ))
+}
+
 add_domain() {
 echo -e "${CCYAN}Sous domaine de $1 ${CEND}"
 DOMMAJ=$(echo "$1" | tr "[:lower:]" "[:upper:]")

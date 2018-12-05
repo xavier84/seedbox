@@ -9,9 +9,9 @@ logo.sh
 echo ""
 echo -e "${CCYAN}INSTALLATION${CEND}"
 	echo -e "${CGREEN}${CEND}"
-	echo -e "${CGREEN}   1) Installation/réinstallation  de docker && docker-compose (Ubuntu, Debian) ${CEND}"
-	echo -e "${CGREEN}   2) Configuration des variables pour docker-compose ${CEND}"
-	echo -e "${CGREEN}   3) Applications ${CEND}"
+	echo -e "${CGREEN}   1) Installation/réinstallation  de docker, docker-compose, traefik + configuration ${CEND}"
+	echo -e "${CGREEN}   2) Configuration des variables pour docker-compose pour chaque utilisateurs${CEND}"
+	echo -e "${CGREEN}   3) Ajout Applications pour chaque Utilisateur ${CEND}"
 	echo -e "${CGREEN}   4) Sécuriser la Seedbox ${CEND}"
 	echo -e "${CGREEN}   5) Sauvegarde && Restauration${CEND}"
 	echo -e "${CGREEN}   6) Quitter ${CEND}"
@@ -60,7 +60,87 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 				echo ""
 				read -p "Appuyer sur la touche Entrer pour revenir au menu principal"
 
+			fi
+
+			echo -e "${CCYAN}-------------------------------------------------------------------------------------------------------------------------${CEND}"
+			echo -e "${CCYAN}					CONFIGURATION DE TRAEFIK				  ${CEND}"
+			echo -e "${CCYAN}-------------------------------------------------------------------------------------------------------------------------${CEND}"
+			echo ""
+			echo ""
+
+			echo -e "${CCYAN}Nom de domaine ${CEND}"
+			read -rp "DOMAIN = " DOMAIN
+
+			echo  ""
+			echo -e "${CCYAN}Nom d'utilisateur pour l'authentification Traefik ${CEND}"
+			read -rp "USERNAME = " USERNAME
+
+			echo  ""
+			echo -e "${CCYAN}Mot de passe pour l'authentification Traefik ${CEND}"
+			read -rp "PASSWD = " PASSWD
+
+			echo ""
+			echo -e "${CCYAN}Adresse mail pour Traefik ${CEND}"
+			read -rp "MAIL = " MAIL
+
+			echo -e "${CCYAN}Sous domaine de Traefik ${CEND}"
+			echo -e "${CRED}laissé vide pour avoir  https://traefik.${DOMAIN}${CEND}"
+			read -rp "TRAEFIK_DASHBOARD_URL = " TRAEFIK_DASHBOARD_URL
+
+				if [ -n "$TRAEFIK_DASHBOARD_URL" ]
+				then
+					export TRAEFIK_DASHBOARD_URL=${TRAEFIK_DASHBOARD_URL}.${DOMAIN}
+				else
+					export TRAEFIK_DASHBOARD_URL=traefik.${DOMAIN}
 				fi
+
+
+			htpasswd -bs /etc/apache2/.htpasswd "$USERNAME" "$PASSWD"
+			htpasswd -cbs /etc/apache2/.htpasswd_"$USERNAME" "$USERNAME" "$PASSWD"
+			VAR=$(sed -e 's/\$/\$$/g' /etc/apache2/.htpasswd_"$USERNAME" 2>/dev/null)
+
+
+			export PROXY_NETWORK=traefik_proxy
+			mkdir -p ${VOLUMES_TRAEFIK_PATH}
+			mkdir -p /var/www
+			cp -R /usr/local/bin/dockers/traefik/html /var/www/
+			cp /usr/local/bin/dockers/traefik/traefik.toml  ${VOLUMES_TRAEFIK_PATH}/traefik.toml
+			cp /usr/local/bin/dockers/traefik/docker-compose.yml ${VOLUMES_TRAEFIK_PATH}/docker-compose.yml
+			cat <<- EOF > /home/"VOLUMES_TRAEFIK_PATH"/.env
+
+			VAR=$VAR
+			MAIL=$MAIL
+			USERNAME=$USERNAME
+			PASSWD=$PASSWD
+			DOMAIN=$DOMAIN
+			PROXY_NETWORK=$PROXY_NETWORK
+			TRAEFIK_DASHBOARD_URL=$TRAEFIK_DASHBOARD_URL
+
+			EOF
+
+
+			sed -i "s|@MAIL@|$MAIL|g;" ${VOLUMES_TRAEFIK_PATH}/traefik.toml
+			sed -i "s|@DOMAIN@|$DOMAIN|g;" ${VOLUMES_TRAEFIK_PATH}/traefik.toml
+
+			sed -i "s|@TRAEFIK_DASHBOARD_URL@|$TRAEFIK_DASHBOARD_URL|g;" ${VOLUMES_TRAEFIK_PATH}/docker-compose.yml
+			sed -i "s|@VOLUMES_TRAEFIK_PATH@|$VOLUMES_TRAEFIK_PATH|g;" ${VOLUMES_TRAEFIK_PATH}/docker-compose.yml
+			sed -i "s|@PROXY_NETWORK@|$PROXY_NETWORK|g;" ${VOLUMES_TRAEFIK_PATH}/docker-compose.yml
+			sed -i "s|@DOMAIN@|$DOMAIN|g;" ${VOLUMES_TRAEFIK_PATH}/docker-compose.yml
+			sed -i "s|@VAR@|$VAR|g;" ${VOLUMES_TRAEFIK_PATH}/docker-compose.yml
+
+			clear
+			echo -e "${CCYAN}-------------------------------------------------------------------------------------------------------------------------${CEND}"
+			echo -e "${CCYAN}					VERIFICATION ET MISE EN ROUTE DE TRAEFIK				  ${CEND}"
+			echo -e "${CCYAN}-------------------------------------------------------------------------------------------------------------------------${CEND}"
+			echo ""
+			echo ""
+			progress-bar 20
+			docker network create traefik_proxy
+			docker-compose -f ${VOLUMES_TRAEFIK_PATH}/docker-compose.yml up -d
+			echo ""
+			echo -e "${CCYAN}La configuration des variables s'est parfaitement déroulée ${CEND}"
+			echo ""
+			read -p "Appuyer sur la touche Entrer pour continuer"
 
 		;;
 
@@ -70,7 +150,7 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 			echo -e "${CCYAN}-------------------------------------------------------------------------------------------------------------------------${CEND}"
 			echo -e "${CCYAN}					PRECISONS SUR LES VARIABLES							  ${CEND}"
 			echo -e "${CCYAN}-------------------------------------------------------------------------------------------------------------------------${CEND}"
-			echo -e "${CGREEN}		Cette étape permet une installation personnalisée configurable à vos besoins				 ${CEND}"
+			echo -e "${CGREEN}		ajout Utilisateur 				 ${CEND}"
 			echo -e "${CGREEN}		Une fois les variables définies, la configuration sera complètement automatisée 			 ${CEND}"
 			echo -e "${CRED}-------------------------------------------------------------------------------------------------------------------------${CEND}"
 			echo -e "${CCYAN}															 ${CEND}"
@@ -84,33 +164,35 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 			read -rp "DOMAIN = " DOMAIN
 
 			echo  ""
-			echo -e "${CCYAN}Nom d'utilisateur pour l'authentification WEB ${CEND}"
+			echo -e "${CCYAN}Nom d'utilisateur pour l'authentification Web ${CEND}"
 			read -rp "USERNAME = " USERNAME
 
 			echo  ""
-			echo -e "${CCYAN}Mot de passe pour l'authentification WEB ${CEND}"
+			echo -e "${CCYAN}Mot de passe pour l'authentification Web ${CEND}"
 			read -rp "PASSWD = " PASSWD
 
 			echo ""
-			echo -e "${CCYAN}Adresse mail ${CEND}"
+			echo -e "${CCYAN}Adresse mail pour Web ${CEND}"
 			read -rp "MAIL = " MAIL
 
 			useradd -M -s /bin/bash "$USERNAME"
 			echo "${USERNAME}:${PASSWD}" | chpasswd
 			mkdir -p /home/"$USERNAME"
 			chown -R "$USERNAME":"$USERNAME" /home/"$USERNAME"
-			htpasswd -bs /etc/apache2/.htpasswd "$USERNAME" "$PASSWD"
 			htpasswd -cbs /etc/apache2/.htpasswd_"$USERNAME" "$USERNAME" "$PASSWD"
 			VAR=$(sed -e 's/\$/\$$/g' /etc/apache2/.htpasswd_"$USERNAME" 2>/dev/null)
 			export VOLUMES_ROOT_PATH=/home/"$USERNAME"
 			export PASSWD
 			progress-bar 10
 
+
+
+
+
 			clear
 			echo -e "${CCYAN}-------------------------------------------------------------------------------------------------------------------------${CEND}"
 			echo -e "${CCYAN}				LES VARIABLES CI DESSOUS DONT DEFINIES PAR DEFAULT				  ${CEND}"
 			echo -e "${CCYAN}-------------------------------------------------------------------------------------------------------------------------${CEND}"
-			echo -e "${CRED}	${CCYAN}TRAEFIK_DASHBOARD_URL:${CRED}	traefik.${DOMAIN}	  						  ${CEND}"
 			echo -e "${CRED}	${CCYAN}PLEX_FQDN:${CRED}		plex.${DOMAIN} 			  				  	  ${CEND}"
 			echo -e "${CRED}	${CCYAN}PYLOAD_FQDN:${CRED}		pyload.${DOMAIN}							  ${CEND}"
 			echo -e "${CRED}	${CCYAN}MEDUSA_FQDN:${CRED}		medusa.${DOMAIN}							  ${CEND}"
@@ -132,19 +214,9 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 			echo""
 			if [[ "$EXCLUDE" = "o" ]] || [[ "$EXCLUDE" = "O" ]]; then
 
-			echo -e "${CCYAN}-------------------------------------------------------------------------------------------------------------------------${CEND}"
-			echo -e "${CCYAN}				JUSTE SAISIR LE SOUS DOMAINE ET NON LE DOMAINE						  ${CEND}"
-			echo -e "${CCYAN}-------------------------------------------------------------------------------------------------------------------------${CEND}"
-
-			echo -e "${CCYAN}Sous domaine de Traefik${CEND}"
-			read -rp "TRAEFIK_DASHBOARD_URL = " TRAEFIK_DASHBOARD_URL
-
-				if [ -n "$TRAEFIK_DASHBOARD_URL" ]
-				then
-					export TRAEFIK_DASHBOARD_URL=${TRAEFIK_DASHBOARD_URL}.${DOMAIN}
-				else
-					export TRAEFIK_DASHBOARD_URL=traefik.${DOMAIN}
-				fi
+				echo -e "${CCYAN}-------------------------------------------------------------------------------------------------------------------------${CEND}"
+				echo -e "${CCYAN}				JUSTE SAISIR LE SOUS DOMAINE ET NON LE DOMAINE						  ${CEND}"
+				echo -e "${CCYAN}-------------------------------------------------------------------------------------------------------------------------${CEND}"
 
 				for DOM in ${LISTAPP}
 				do
@@ -161,7 +233,6 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 					fi
 				done
 			else
-			 		export TRAEFIK_DASHBOARD_URL=traefik.${DOMAIN}
 					for DOM in ${LISTAPP}
 					do
 						DOMMAJ=$(echo "$DOM" | tr "[:lower:]" "[:upper:]")
@@ -169,7 +240,6 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 					done
 			fi
 
-			export PROXY_NETWORK=traefik_proxy
 			## Création d'un fichier .env
 
 			cat <<- EOF > /home/"$USERNAME"/.env
@@ -185,7 +255,6 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 			DOMAIN=$DOMAIN
 			PASS=$PASS
 			PROXY_NETWORK=$PROXY_NETWORK
-			TRAEFIK_DASHBOARD_URL=$TRAEFIK_DASHBOARD_URL
 			PLEX_FQDN=$PLEX_FQDN
 			LIDARR_FQDN=$LIDARR_FQDN
 			MEDUSA_FQDN=$MEDUSA_FQDN
@@ -201,37 +270,12 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 
 			EOF
 
-			mkdir -p ${VOLUMES_TRAEFIK_PATH}
-			mkdir -p /var/www
-			cp -R /usr/local/bin/dockers/traefik/html /var/www/
-			cp /usr/local/bin/dockers/traefik/traefik.toml  ${VOLUMES_TRAEFIK_PATH}/traefik.toml
-			cp /usr/local/bin/dockers/traefik/docker-compose.yml ${VOLUMES_TRAEFIK_PATH}/docker-compose.yml
-
-			sed -i "s|@MAIL@|$MAIL|g;" ${VOLUMES_TRAEFIK_PATH}/traefik.toml
-			sed -i "s|@DOMAIN@|$DOMAIN|g;" ${VOLUMES_TRAEFIK_PATH}/traefik.toml
-
-			sed -i "s|@TRAEFIK_DASHBOARD_URL@|$TRAEFIK_DASHBOARD_URL|g;" ${VOLUMES_TRAEFIK_PATH}/docker-compose.yml
-			sed -i "s|@VOLUMES_TRAEFIK_PATH@|$VOLUMES_TRAEFIK_PATH|g;" ${VOLUMES_TRAEFIK_PATH}/docker-compose.yml
-			sed -i "s|@PROXY_NETWORK@|$PROXY_NETWORK|g;" ${VOLUMES_TRAEFIK_PATH}/docker-compose.yml
-			sed -i "s|@DOMAIN@|$DOMAIN|g;" ${VOLUMES_TRAEFIK_PATH}/docker-compose.yml
-			sed -i "s|@VAR@|$VAR|g;" ${VOLUMES_TRAEFIK_PATH}/docker-compose.yml
-
-
-
-
-			clear
-			echo -e "${CCYAN}-------------------------------------------------------------------------------------------------------------------------${CEND}"
-			echo -e "${CCYAN}					VERIFICATION ET MISE EN ROUTE DE TRAEFIK				  ${CEND}"
-			echo -e "${CCYAN}-------------------------------------------------------------------------------------------------------------------------${CEND}"
 			echo ""
-			echo ""
-			progress-bar 20
-			docker network create traefik_proxy
-			docker-compose -f ${VOLUMES_TRAEFIK_PATH}/docker-compose.yml up -d
-			echo ""
-			echo -e "${CCYAN}La configuration des variables s'est parfaitement déroulée ${CEND}"
+			echo -e "${CCYAN}La configuration des variables s'est parfaitement déroulée  ${CEND}"
+			echo -e "${CCYAN}Maintenent aller sur applications  ${CEND}"
 			echo ""
 			read -p "Appuyer sur la touche Entrer pour continuer"
+
 		;;
 
 
@@ -337,6 +381,8 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 					docker exec -t torrent-$USERNAME sed -i -e "s/Animes/${ANIMES}/g" /usr/local/bin/postdl
 					docker exec -t torrent-$USERNAME sed -i '/*)/,/;;/d' /usr/local/bin/postdl
 					docker exec -t torrent-$USERNAME chown -R 1001:1001 /mnt
+
+					echo "torrent-$USERNAME" >> /home/"$USERNAME"/appli.txt
 					read -p "Appuyer sur la touche Entrer pour continuer"
 					clear
 					logo.sh
