@@ -182,7 +182,9 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 			htpasswd -cbs /etc/apache2/.htpasswd_"$USERNAME" "$USERNAME" "$PASSWD"
 			VAR=$(sed -e 's/\$/\$$/g' /etc/apache2/.htpasswd_"$USERNAME" 2>/dev/null)
 			export VOLUMES_ROOT_PATH=/home/"$USERNAME"
+			export PROXY_NETWORK=traefik_proxy
 			export PASSWD
+			USERMULTI=-${USERNAME}
 			progress-bar 10
 
 
@@ -193,18 +195,18 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 			echo -e "${CCYAN}-------------------------------------------------------------------------------------------------------------------------${CEND}"
 			echo -e "${CCYAN}				LES VARIABLES CI DESSOUS DONT DEFINIES PAR DEFAULT				  ${CEND}"
 			echo -e "${CCYAN}-------------------------------------------------------------------------------------------------------------------------${CEND}"
-			echo -e "${CRED}	${CCYAN}PLEX_FQDN:${CRED}		plex.${DOMAIN} 			  				  	  ${CEND}"
-			echo -e "${CRED}	${CCYAN}PYLOAD_FQDN:${CRED}		pyload.${DOMAIN}							  ${CEND}"
-			echo -e "${CRED}	${CCYAN}MEDUSA_FQDN:${CRED}		medusa.${DOMAIN}							  ${CEND}"
-			echo -e "${CRED}	${CCYAN}RTORRENT_FQDN:${CRED}		rtorrent.${DOMAIN}							  ${CEND}"
-			echo -e "${CRED}	${CCYAN}RADARR_FQDN:${CRED}		radarr.${DOMAIN}							  ${CEND}"
-			echo -e "${CRED}	${CCYAN}SYNCTHING_FQDN:${CRED}		syncthing.${DOMAIN}							  ${CEND}"
-			echo -e "${CRED}	${CCYAN}JACKETT_FQDN:${CRED}		jackett.${DOMAIN}							  ${CEND}"
-			echo -e "${CRED}	${CCYAN}LIDARR_FQDN:${CRED}		lidarr.${DOMAIN}							  ${CEND}"
-			echo -e "${CRED}	${CCYAN}PORTAINER_FQDN:${CRED}		portainer.${DOMAIN}							  ${CEND}"
-			echo -e "${CRED}	${CCYAN}TAUTULLI_FQDN:${CRED}		tautulli.${DOMAIN}							  ${CEND}"
-			echo -e "${CRED}	${CCYAN}NEXTCLOUD_FQDN:${CRED}		nextcloud.${DOMAIN}							  ${CEND}"
-			echo -e "${CRED}	${CCYAN}HEIMDALL_FQDN:${CRED}		heimdall.${DOMAIN}							  ${CEND}"
+			echo -e "${CRED}	${CCYAN}PLEX_FQDN:${CRED}		plex${USERMULTI}.${DOMAIN} 			  				  	  ${CEND}"
+			echo -e "${CRED}	${CCYAN}PYLOAD_FQDN:${CRED}		pyload${USERMULTI}.${DOMAIN}							  ${CEND}"
+			echo -e "${CRED}	${CCYAN}MEDUSA_FQDN:${CRED}		medusa${USERMULTI}.${DOMAIN}							  ${CEND}"
+			echo -e "${CRED}	${CCYAN}RTORRENT_FQDN:${CRED}		rtorrent${USERMULTI}.${DOMAIN}							  ${CEND}"
+			echo -e "${CRED}	${CCYAN}RADARR_FQDN:${CRED}		radarr${USERMULTI}.${DOMAIN}							  ${CEND}"
+			echo -e "${CRED}	${CCYAN}SYNCTHING_FQDN:${CRED}		syncthing${USERMULTI}.${DOMAIN}							  ${CEND}"
+			echo -e "${CRED}	${CCYAN}JACKETT_FQDN:${CRED}		jackett${USERMULTI}.${DOMAIN}							  ${CEND}"
+			echo -e "${CRED}	${CCYAN}LIDARR_FQDN:${CRED}		lidarr${USERMULTI}.${DOMAIN}							  ${CEND}"
+			echo -e "${CRED}	${CCYAN}PORTAINER_FQDN:${CRED}		portainer${USERMULTI}.${DOMAIN}							  ${CEND}"
+			echo -e "${CRED}	${CCYAN}TAUTULLI_FQDN:${CRED}		tautulli${USERMULTI}.${DOMAIN}							  ${CEND}"
+			echo -e "${CRED}	${CCYAN}NEXTCLOUD_FQDN:${CRED}		nextcloud${USERMULTI}.${DOMAIN}							  ${CEND}"
+			echo -e "${CRED}	${CCYAN}HEIMDALL_FQDN:${CRED}		heimdall${USERMULTI}.${DOMAIN}							  ${CEND}"
 			echo -e "${CRED}-------------------------------------------------------------------------------------------------------------------------${CEND}"
 			echo -e "${CGREEN}				VOUS POUVEZ MODIFIER TOUTES CES VARIABLES A VOTRE CONVENANCE				  ${CEND}"
 			echo -e "${CGREEN}				TAPER ENSUITE SUR LA TOUCHE ENTREE POUR VALIDER 					  ${CEND}"
@@ -229,14 +231,14 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 					then
 			 			export ${DOMMAJ}_FQDN=${DOM_FQDN}.${DOMAIN}
 					else
-			 			export ${DOMMAJ}_FQDN=${DOM}.${DOMAIN}
+			 			export ${DOMMAJ}_FQDN=${DOM}${USERMULTI}.${DOMAIN}
 					fi
 				done
 			else
 					for DOM in ${LISTAPP}
 					do
 						DOMMAJ=$(echo "$DOM" | tr "[:lower:]" "[:upper:]")
-						export ${DOMMAJ}_FQDN=${DOM}.${DOMAIN}
+						export ${DOMMAJ}_FQDN=${DOM}${USERMULTI}.${DOMAIN}
 					done
 			fi
 
