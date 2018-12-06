@@ -72,15 +72,15 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 			read -rp "DOMAIN = " DOMAIN
 
 			echo  ""
-			echo -e "${CCYAN}Nom d'utilisateur pour l'authentification Traefik ${CEND}"
+			echo -e "${CCYAN}Nom d'utilisateur pour l'authentification ${CEND}${CRED}Traefik ${CEND}"
 			read -rp "USERNAME = " USERNAME
 
 			echo  ""
-			echo -e "${CCYAN}Mot de passe pour l'authentification Traefik ${CEND}"
+			echo -e "${CCYAN}Mot de passe pour l'authentification ${CEND}${CRED}Traefik ${CEND}"
 			read -rp "PASSWD = " PASSWD
 
 			echo ""
-			echo -e "${CCYAN}Adresse mail pour Traefik ${CEND}"
+			echo -e "${CCYAN}Adresse mail pour ${CEND}${CRED}Traefik ${CEND}"
 			read -rp "MAIL = " MAIL
 
 			echo -e "${CCYAN}Sous domaine de Traefik ${CEND}"
@@ -292,6 +292,7 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 			if [ ! -f /home/"$USERNAME"/docker-compose.yml ]; then
 				cp /usr/local/bin/dockers/docker-compose.yml /home/"$USERNAME"/docker-compose.yml
 				sed_docker /home/"$USERNAME"/docker-compose.yml
+				touch /home/"$USERNAME"/appli.txt
 			fi
 			cd /mnt
 			APPLI=""
@@ -357,38 +358,48 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 				;;
 
 				2)
-				if docker ps -a | grep -q torrent-$USERNAME; then
+
+				if docker ps  | grep -q torrent-$USERNAME; then
 					echo -e "${CGREEN}rtorrent est déjà lancé${CEND}"
 					echo ""
 					read -p "Appuyer sur la touche Entrer pour retourner au menu"
 					clear
 					logo.sh
 				else
-					export $(xargs </home/"$USERNAME"/.env)
-					docker-compose -f /home/"$USERNAME"/docker-compose.yml up -d torrent-$USERNAME
-					progress-bar 20
-					echo ""
-					echo -e "${CGREEN}Installation de Rtorrent réussie${CEND}"
-					echo ""
+					grep ^torrent-$USERNAME$ /home/"$USERNAME"/appli.txt
+					if  [ $? = 0 ] ; then
+						echo ""
+						echo -e "${CRED}Bizarre application activé mais pas lancer${CEND}"
+						echo -e "${CRED}aller je relance application${CEND}"
+						echo ""
+						docker-compose -f /home/"$USERNAME"/docker-compose.yml up -d torrent-$USERNAME
+					else
+						export $(xargs </home/"$USERNAME"/.env)
+						docker-compose -f /home/"$USERNAME"/docker-compose.yml up -d torrent-$USERNAME
+						progress-bar 20
+						echo ""
+						echo -e "${CGREEN}Installation de Rtorrent réussie${CEND}"
+						echo ""
 
-					# Configuration pour le téléchargement en manuel avec filebot
-					docker exec -t torrent-$USERNAME rm -rf /data/Media/*
-					rm -rf $VOLUMES_ROOT_PATH/Medias/*
-					docker exec -t torrent-$USERNAME mkdir -p /data/Media/${FILMS}
-					docker exec -t torrent-$USERNAME mkdir -p /data/Media/${SERIES}
-					docker exec -t torrent-$USERNAME mkdir -p /data/Media/${MUSIC}
-					docker exec -t torrent-$USERNAME mkdir -p /data/Media/${ANIMES}
-					docker exec -t torrent-$USERNAME sed -i -e "s/Movies/${FILMS}/g" /usr/local/bin/postdl
-					docker exec -t torrent-$USERNAME sed -i -e "s/TV/${SERIES}/g" /usr/local/bin/postdl
-					docker exec -t torrent-$USERNAME sed -i -e "s/Music/${MUSIC}/g" /usr/local/bin/postdl
-					docker exec -t torrent-$USERNAME sed -i -e "s/Animes/${ANIMES}/g" /usr/local/bin/postdl
-					docker exec -t torrent-$USERNAME sed -i '/*)/,/;;/d' /usr/local/bin/postdl
-					docker exec -t torrent-$USERNAME chown -R 1001:1001 /mnt
+						# Configuration pour le téléchargement en manuel avec filebot
+						docker exec -t torrent-$USERNAME rm -rf /data/Media/*
+						rm -rf $VOLUMES_ROOT_PATH/Medias/*
+						docker exec -t torrent-$USERNAME mkdir -p /data/Media/${FILMS}
+						docker exec -t torrent-$USERNAME mkdir -p /data/Media/${SERIES}
+						docker exec -t torrent-$USERNAME mkdir -p /data/Media/${MUSIC}
+						docker exec -t torrent-$USERNAME mkdir -p /data/Media/${ANIMES}
+						docker exec -t torrent-$USERNAME sed -i -e "s/Movies/${FILMS}/g" /usr/local/bin/postdl
+						docker exec -t torrent-$USERNAME sed -i -e "s/TV/${SERIES}/g" /usr/local/bin/postdl
+						docker exec -t torrent-$USERNAME sed -i -e "s/Music/${MUSIC}/g" /usr/local/bin/postdl
+						docker exec -t torrent-$USERNAME sed -i -e "s/Animes/${ANIMES}/g" /usr/local/bin/postdl
+						docker exec -t torrent-$USERNAME sed -i '/*)/,/;;/d' /usr/local/bin/postdl
+						docker exec -t torrent-$USERNAME chown -R 1001:1001 /mnt
 
-					echo "torrent-$USERNAME" >> /home/"$USERNAME"/appli.txt
-					read -p "Appuyer sur la touche Entrer pour continuer"
-					clear
-					logo.sh
+						echo "torrent-$USERNAME" >> /home/"$USERNAME"/appli.txt
+						read -p "Appuyer sur la touche Entrer pour continuer"
+						clear
+						logo.sh
+					fi
 				fi
 
 				;;
