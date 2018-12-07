@@ -67,10 +67,28 @@ calcul_port () {
 	PORT1=$(( $(($2))+HISTO ))
 }
 
-add_cont () {
-	HISTO=$(wc -l < "$CONFDIR"/ports.txt)
-	PORT=$(( $(($1))+HISTO ))
-	PORT1=$(( $(($2))+HISTO ))
+add_appli () {
+	USERNAME=$1
+	NAME=$2
+
+	if docker ps  | grep -q ${NAME}-$USERNAME; then
+		echo -e "${CGREEN}${NAME}est déjà lancé${CEND}"
+		echo ""
+		read -p "Appuyer sur la touche Entrer pour retourner au menu"
+		clear
+		logo.sh
+	else
+		grep ^${NAME}-$USERNAME$ /home/"$USERNAME"/appli.txt
+		if  [ $? = 0 ] ; then
+			echo ""
+			echo -e "${CRED}Bizarre application activé mais pas lancer${CEND}"
+			echo -e "${CRED}aller je relance application${CEND}"
+			echo ""
+			docker-compose -f /home/"$USERNAME"/docker-compose.yml up -d ${NAME}-$USERNAME
+		else
+			INSTALL=INSTALL
+		fi
+	fi
 }
 
 del_cont () {

@@ -11,10 +11,12 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 	echo -e "${CGREEN}${CEND}"
 	echo -e "${CGREEN}   1) Installation/réinstallation  de docker, docker-compose, traefik + configuration ${CEND}"
 	echo -e "${CGREEN}   2) Creation de utilisateurs et Configuration des variables pour docker-compose${CEND}"
-	echo -e "${CGREEN}   3) Ajout Applications pour chaque Utilisateur ${CEND}"
-	echo -e "${CGREEN}   4) Sécuriser la Seedbox ${CEND}"
-	echo -e "${CGREEN}   5) Sauvegarde && Restauration${CEND}"
-	echo -e "${CGREEN}   6) Quitter ${CEND}"
+	echo -e "${CGREEN}   3) Suppression utilisateur${CEND}"
+	echo -e "${CGREEN}   4) Ajout Applications par Utilisateur ${CEND}"
+	echo -e "${CGREEN}   5) Suppression Applications${CEND}"
+	echo -e "${CGREEN}   6) Sécuriser la Seedbox ${CEND}"
+	echo -e "${CGREEN}   7) Sauvegarde && Restauration${CEND}"
+	echo -e "${CGREEN}   15) Quitter ${CEND}"
 	echo -e ""
 	read -p "Votre choix [1-6]: " -e -i 1 PORT_CHOICE
 
@@ -42,7 +44,7 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 				logo.sh
 				echo -e "${CCYAN}Installation docker & docker compose terminée${CEND}"
 				echo ""
-				read -p "Appuyer sur la touche Entrer pour revenir au menu principal"
+				read -p "Appuyer sur la touche Entrer pour continuer la configuration de traefik"
 
 			else
 				apt update && apt upgrade -y
@@ -58,7 +60,7 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 				logo.sh
 				echo -e "${CCYAN}Installation docker & docker compose terminée${CEND}"
 				echo ""
-				read -p "Appuyer sur la touche Entrer pour revenir au menu principal"
+				read -p "Appuyer sur la touche Entrer pour continuer la configuration de traefik"
 
 			fi
 
@@ -280,8 +282,12 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 
 		;;
 
-
 		3)
+		Suppression user
+		;;
+
+
+		4)
 			clear
 			logo.sh
 			echo  ""
@@ -359,21 +365,8 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 
 				2)
 
-				if docker ps  | grep -q torrent-$USERNAME; then
-					echo -e "${CGREEN}rtorrent est déjà lancé${CEND}"
-					echo ""
-					read -p "Appuyer sur la touche Entrer pour retourner au menu"
-					clear
-					logo.sh
-				else
-					grep ^torrent-$USERNAME$ /home/"$USERNAME"/appli.txt
-					if  [ $? = 0 ] ; then
-						echo ""
-						echo -e "${CRED}Bizarre application activé mais pas lancer${CEND}"
-						echo -e "${CRED}aller je relance application${CEND}"
-						echo ""
-						docker-compose -f /home/"$USERNAME"/docker-compose.yml up -d torrent-$USERNAME
-					else
+				add_appli $USERNAME torrent
+					if  [ $INSTALL = INSTALL ] ; then
 						export $(xargs </home/"$USERNAME"/.env)
 						docker-compose -f /home/"$USERNAME"/docker-compose.yml up -d torrent-$USERNAME
 						progress-bar 20
@@ -400,7 +393,6 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 						clear
 						logo.sh
 					fi
-				fi
 
 				;;
 
@@ -633,7 +625,11 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 
 		;;
 
-		4)
+		5)
+		Suppression appli
+		;;
+
+		6)
 		clear
 		logo.sh
 		OUTIL=""
@@ -962,7 +958,7 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 			done
 			;;
 
-		5) # Sauvegarde de la configuration
+		7) # Sauvegarde de la configuration
 		clear
 		logo.sh
 		SAUVE=""
@@ -1074,10 +1070,10 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 
 			esac
 			done
-			;;
+		;;
 
-		6)
-		exit 0
+		15)
+			exit 0
 		;;
 		*)
 				echo ""
