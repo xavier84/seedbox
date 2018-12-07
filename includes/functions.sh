@@ -70,6 +70,7 @@ calcul_port () {
 add_appli () {
 	USERNAME=$1
 	NAME=$2
+	INSTALL=""
 
 	if docker ps  | grep -q ${NAME}-$USERNAME; then
 		echo -e "${CGREEN}${NAME}est déjà lancé${CEND}"

@@ -323,7 +323,7 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 			echo -e "${CGREEN}   10) Tautulli ${CEND}"
 			echo -e "${CGREEN}   11) Heimball ${CEND}"
 			echo -e "${CGREEN}   12) Nextcloud ${CEND}"
-			echo -e "${CGREEN}   13) Retour Menu Principal ${CEND}"
+			echo -e "${CGREEN}   30) Retour Menu Principal ${CEND}"
 			echo ""
 			read -p "Appli choix [1-13]: " -e -i 1 APPLI
 			echo ""
@@ -364,14 +364,14 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 				;;
 
 				2)
-
-				add_appli $USERNAME torrent
+				LOGICIEL=torrent
+				add_appli $USERNAME $LOGICIEL
 					if  [ $INSTALL = INSTALL ] ; then
 						export $(xargs </home/"$USERNAME"/.env)
-						docker-compose -f /home/"$USERNAME"/docker-compose.yml up -d torrent-$USERNAME
+						docker-compose -f /home/"$USERNAME"/docker-compose.yml up -d $LOGICIEL-$USERNAME
 						progress-bar 20
 						echo ""
-						echo -e "${CGREEN}Installation de Rtorrent réussie${CEND}"
+						echo -e "${CGREEN}Installation de $LOGICIEL réussie${CEND}"
 						echo ""
 
 						# Configuration pour le téléchargement en manuel avec filebot
@@ -388,7 +388,7 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 						docker exec -t torrent-$USERNAME sed -i '/*)/,/;;/d' /usr/local/bin/postdl
 						docker exec -t torrent-$USERNAME chown -R 1001:1001 /mnt
 
-						echo "torrent-$USERNAME" >> /home/"$USERNAME"/appli.txt
+						echo "$LOGICIEL-$USERNAME" >> /home/"$USERNAME"/appli.txt
 						read -p "Appuyer sur la touche Entrer pour continuer"
 						clear
 						logo.sh
@@ -397,19 +397,17 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 				;;
 
 				3)
-
-				if docker ps -a | grep -q radarr; then
-					echo -e "${CGREEN}Radarr est déjà lancé${CEND}"
-					echo ""
-					read -p "Appuyer sur la touche Entrer pour retourner au menu"
-					clear
-					logo.sh
-				else
-					docker-compose up -d radarr 2>/dev/null
+				LOGICIEL=radarr
+				add_appli $USERNAME $LOGICIEL
+				if  [ $INSTALL = INSTALL ] ; then
+					export $(xargs </home/"$USERNAME"/.env)
+					docker-compose -f /home/"$USERNAME"/docker-compose.yml up -d $LOGICIEL-$USERNAME
+					docker-compose up -d $LOGICIEL 2>/dev/null
 					progress-bar 20
 					echo ""
-					echo -e "${CGREEN}Installation de radarr réussie${CEND}"
+					echo -e "${CGREEN}Installation de $LOGICIEL réussie${CEND}"
 					echo ""
+					echo "$LOGICIEL-$USERNAME" >> /home/"$USERNAME"/appli.txt
 					read -p "Appuyer sur la touche Entrer pour continuer"
 					clear
 					logo.sh
@@ -419,18 +417,17 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 
 				4)
 
-				if docker ps -a | grep -q lidarr; then
-					echo -e "${CGREEN}Lidarr est déjà lancé${CEND}"
-					echo ""
-					read -p "Appuyer sur la touche Entrer pour retourner au menu"
-					clear
-					logo.sh
-				else
-					docker-compose up -d lidarr 2>/dev/null
+				LOGICIEL=lidarr
+				add_appli $USERNAME $LOGICIEL
+				if  [ $INSTALL = INSTALL ] ; then
+					export $(xargs </home/"$USERNAME"/.env)
+					docker-compose -f /home/"$USERNAME"/docker-compose.yml up -d $LOGICIEL-$USERNAME
+					docker-compose up -d $LOGICIEL 2>/dev/null
 					progress-bar 20
 					echo ""
-					echo -e "${CGREEN}Installation de lidarr réussie${CEND}"
+					echo -e "${CGREEN}Installation de $LOGICIEL réussie${CEND}"
 					echo ""
+					echo "$LOGICIEL-$USERNAME" >> /home/"$USERNAME"/appli.txt
 					read -p "Appuyer sur la touche Entrer pour continuer"
 					clear
 					logo.sh
@@ -440,18 +437,17 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 
 
 				5)
-				if docker ps -a | grep -q medusa; then
-					echo -e "${CGREEN}Medusa est déjà lancé${CEND}"
-					echo ""
-					read -p "Appuyer sur la touche Entrer pour retourner au menu"
-					clear
-					logo.sh
-				else
-					docker-compose up -d medusa 2>/dev/null
+				LOGICIEL=medusa
+				add_appli $USERNAME $LOGICIEL
+				if  [ $INSTALL = INSTALL ] ; then
+					export $(xargs </home/"$USERNAME"/.env)
+					docker-compose -f /home/"$USERNAME"/docker-compose.yml up -d $LOGICIEL-$USERNAME
+					docker-compose up -d $LOGICIEL 2>/dev/null
 					progress-bar 20
 					echo ""
-					echo -e "${CGREEN}Installation de medusa réussie${CEND}"
+					echo -e "${CGREEN}Installation de $LOGICIEL réussie${CEND}"
 					echo ""
+					echo "$LOGICIEL-$USERNAME" >> /home/"$USERNAME"/appli.txt
 					read -p "Appuyer sur la touche Entrer pour continuer"
 					clear
 					logo.sh
@@ -460,18 +456,17 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 				;;
 
 				6)
-				if docker ps -a | grep -q pyload; then
-					echo -e "${CGREEN}Pyload est déjà lancé${CEND}"
-					echo ""
-					read -p "Appuyer sur la touche Entrer pour retourner au menu"
-					clear
-					logo.sh
-				else
-					docker-compose up -d pyload 2>/dev/null
+				LOGICIEL=pyload
+				add_appli $USERNAME $LOGICIEL
+				if  [ $INSTALL = INSTALL ] ; then
+					export $(xargs </home/"$USERNAME"/.env)
+					docker-compose -f /home/"$USERNAME"/docker-compose.yml up -d $LOGICIEL-$USERNAME
+					docker-compose up -d $LOGICIEL 2>/dev/null
 					progress-bar 20
 					echo ""
-					echo -e "${CGREEN}Installation de pyload réussie${CEND}"
+					echo -e "${CGREEN}Installation de $LOGICIEL réussie${CEND}"
 					echo ""
+					echo "$LOGICIEL-$USERNAME" >> /home/"$USERNAME"/appli.txt
 					read -p "Appuyer sur la touche Entrer pour continuer"
 					clear
 					logo.sh
@@ -480,18 +475,17 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 				;;
 
 				7)
-				if docker ps -a | grep -q syncthing; then
-					echo -e "${CGREEN}Syncthing est déjà lancé${CEND}"
-					echo ""
-					read -p "Appuyer sur la touche Entrer pour retourner au menu"
-					clear
-					logo.sh
-				else
-					docker-compose up -d syncthing 2>/dev/null
+				LOGICIEL=syncthing
+				add_appli $USERNAME $LOGICIEL
+				if  [ $INSTALL = INSTALL ] ; then
+					export $(xargs </home/"$USERNAME"/.env)
+					docker-compose -f /home/"$USERNAME"/docker-compose.yml up -d $LOGICIEL-$USERNAME
+					docker-compose up -d $LOGICIEL 2>/dev/null
 					progress-bar 20
 					echo ""
-					echo -e "${CGREEN}Installation de syncthing réussie${CEND}"
+					echo -e "${CGREEN}Installation de $LOGICIEL réussie${CEND}"
 					echo ""
+					echo "$LOGICIEL-$USERNAME" >> /home/"$USERNAME"/appli.txt
 					read -p "Appuyer sur la touche Entrer pour continuer"
 					clear
 					logo.sh
@@ -500,18 +494,17 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 				;;
 
 				8)
-				if docker ps -a | grep -q jackett; then
-					echo -e "${CGREEN}Jackett est déjà lancé${CEND}"
-					echo ""
-					read -p "Appuyer sur la touche Entrer pour retourner au menu"
-					clear
-					logo.sh
-				else
-					docker-compose up -d jackett 2>/dev/null
+				LOGICIEL=jackett
+				add_appli $USERNAME $LOGICIEL
+				if  [ $INSTALL = INSTALL ] ; then
+					export $(xargs </home/"$USERNAME"/.env)
+					docker-compose -f /home/"$USERNAME"/docker-compose.yml up -d $LOGICIEL-$USERNAME
+					docker-compose up -d $LOGICIEL 2>/dev/null
 					progress-bar 20
 					echo ""
-					echo -e "${CGREEN}Installation de Jackett réussie${CEND}"
+					echo -e "${CGREEN}Installation de $LOGICIEL réussie${CEND}"
 					echo ""
+					echo "$LOGICIEL-$USERNAME" >> /home/"$USERNAME"/appli.txt
 					read -p "Appuyer sur la touche Entrer pour continuer"
 					clear
 					logo.sh
@@ -520,18 +513,17 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 				;;
 
 				9)
-				if docker ps -a | grep -q portainer; then
-					echo -e "${CGREEN}Ombi est déjà lancé${CEND}"
-					echo ""
-					read -p "Appuyer sur la touche Entrer pour retourner au menu"
-					clear
-					logo.sh
-				else
-					docker-compose up -d portainer 2>/dev/null
+				LOGICIEL=portainer
+				add_appli $USERNAME $LOGICIEL
+				if  [ $INSTALL = INSTALL ] ; then
+					export $(xargs </home/"$USERNAME"/.env)
+					docker-compose -f /home/"$USERNAME"/docker-compose.yml up -d $LOGICIEL-$USERNAME
+					docker-compose up -d $LOGICIEL 2>/dev/null
 					progress-bar 20
 					echo ""
-					echo -e "${CGREEN}Installation de portainer réussie${CEND}"
+					echo -e "${CGREEN}Installation de $LOGICIEL réussie${CEND}"
 					echo ""
+					echo "$LOGICIEL-$USERNAME" >> /home/"$USERNAME"/appli.txt
 					read -p "Appuyer sur la touche Entrer pour continuer"
 					clear
 					logo.sh
@@ -540,18 +532,17 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 				;;
 
 				10)
-				if docker ps -a | grep -q tautulli; then
-					echo -e "${CGREEN}Tautulli est déjà lancé${CEND}"
-					echo ""
-					read -p "Appuyer sur la touche Entrer pour retourner au menu"
-					clear
-					logo.sh
-				else
-					docker-compose up -d tautulli 2>/dev/null
+				LOGICIEL=tautulli
+				add_appli $USERNAME $LOGICIEL
+				if  [ $INSTALL = INSTALL ] ; then
+					export $(xargs </home/"$USERNAME"/.env)
+					docker-compose -f /home/"$USERNAME"/docker-compose.yml up -d $LOGICIEL-$USERNAME
+					docker-compose up -d $LOGICIEL 2>/dev/null
 					progress-bar 20
 					echo ""
-					echo -e "${CGREEN}Installation de Tautulli réussie${CEND}"
+					echo -e "${CGREEN}Installation de $LOGICIEL réussie${CEND}"
 					echo ""
+					echo "$LOGICIEL-$USERNAME" >> /home/"$USERNAME"/appli.txt
 					read -p "Appuyer sur la touche Entrer pour continuer"
 					clear
 					logo.sh
@@ -560,18 +551,17 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 				;;
 
 				11)
-				if docker ps -a | grep -q heimdall; then
-					echo -e "${CGREEN}Heimdall est déjà lancé${CEND}"
-					echo ""
-					read -p "Appuyer sur la touche Entrer pour retourner au menu"
-					clear
-					logo.sh
-				else
-					docker-compose up -d heimdall 2>/dev/null
+				LOGICIEL=heimdall
+				add_appli $USERNAME $LOGICIEL
+				if  [ $INSTALL = INSTALL ] ; then
+					export $(xargs </home/"$USERNAME"/.env)
+					docker-compose -f /home/"$USERNAME"/docker-compose.yml up -d $LOGICIEL-$USERNAME
+					docker-compose up -d $LOGICIEL 2>/dev/null
 					progress-bar 20
 					echo ""
-					echo -e "${CGREEN}Installation de heimdall réussie${CEND}"
+					echo -e "${CGREEN}Installation de $LOGICIEL réussie${CEND}"
 					echo ""
+					echo "$LOGICIEL-$USERNAME" >> /home/"$USERNAME"/appli.txt
 					read -p "Appuyer sur la touche Entrer pour continuer"
 					clear
 					logo.sh
@@ -614,7 +604,7 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 
 				;;
 
-				13)
+				30)
 				sortir=true
 				seedbox.sh
 

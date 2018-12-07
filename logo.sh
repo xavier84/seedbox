@@ -69,6 +69,8 @@ print_info() {
     info "CPU" cpu
     info "GPU" gpu
     info "Memory" memory
+    info "Local IP" local_ip
+    info "Public IP" public_ip
 
     # info "GPU Driver" gpu_driver  # Linux/macOS only
     # info "CPU Usage" cpu_usage
@@ -81,9 +83,6 @@ print_info() {
     # info "Users" users
     # info "Locale" locale  # This only works on glibc systems.
 
-    info line_break
-    info cols
-    info line_break
 }
 
 
