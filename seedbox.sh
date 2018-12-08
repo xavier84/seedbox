@@ -283,7 +283,12 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 		;;
 
 		3)
-		Suppression user
+			clear
+			logo.sh
+			echo -e "${CGREEN}-------------------------------------------------------------------------------------------------------------------------${CEND}"
+			echo -e "${CCYAN}					Suppression utilisateur						   ${CEND}"
+			echo -e "${CGREEN}-------------------------------------------------------------------------------------------------------------------------${CEND}"
+			echo ""
 		;;
 
 
@@ -311,8 +316,8 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 			echo -e "${CCYAN}  APPLICATIONS ACTIVE POUR ${USERNAME} :${CEND}${CGREEN} $(tr "\n" " " <<< $(cat /home/"$USERNAME"/appli.txt)) ${CEND}"
 			echo -e "${CRED}-----------------${CEND}"
 			echo ""
-			echo -e "${CGREEN}   1) Plex ${CEND}"
-			echo -e "${CGREEN}   2) Rtorrent ${CEND}"
+			echo -e "${CGREEN}   1) Rtorrent ${CEND}"
+			echo -e "${CGREEN}   2) Plex ${CEND}"
 			echo -e "${CGREEN}   3) Radarr ${CEND}"
 			echo -e "${CGREEN}   4) Lidarr ${CEND}"
 			echo -e "${CGREEN}   5) Medusa ${CEND}"
@@ -329,41 +334,6 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 			echo ""
 			case $APPLI in
 				1)
-				if ps -e | grep -q Plex; then
-					echo -e "${CGREEN}Plex est déjà lancé${CEND}"
-					echo ""
-					read -p "Appuyer sur la touche Entrer pour retourner au menu"
-					clear
-					logo.sh
-				else
-					# CLAIM pour Plex
-					echo ""
-					echo -e "${CCYAN}Un token est nécéssaire pour AUTHENTIFIER le serveur Plex ${CEND}"
-					echo -e "${CCYAN}Pour obtenir un identifiant CLAIM, allez à cette adresse et copier le dans le terminal ${CEND}"
-					echo -e "${CRED}https://www.plex.tv/claim/ ${CEND}"
-					echo ""
-					read -rp "CLAIM = " CLAIM
-
-					if [ -n "$CLAIM" ]
-					then
-						sed -i -e "s/PLEX_CLAIM=/PLEX_CLAIM=${CLAIM}/g" /home/"$USERNAME"/docker-compose.yml
-					fi
-
-					## Lancement de Plex
-					docker-compose up -d plex 2>/dev/null
-					echo ""
-					progress-bar 20
-					echo ""
-					echo -e "${CGREEN}Installation de Plex réussie${CEND}"
-					echo ""
-					read -p "Appuyer sur la touche Entrer pour continuer"
-					clear
-					logo.sh
-				fi
-
-				;;
-
-				2)
 				LOGICIEL=torrent
 				add_appli $USERNAME $LOGICIEL
 					if  [ $INSTALL = INSTALL ] ; then
@@ -394,15 +364,27 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 						logo.sh
 					fi
 
+
 				;;
 
-				3)
-				LOGICIEL=radarr
+				2)
+				LOGICIEL=plex
 				add_appli $USERNAME $LOGICIEL
 				if  [ $INSTALL = INSTALL ] ; then
 					export $(xargs </home/"$USERNAME"/.env)
+					echo -e "${CCYAN}Un token est nécéssaire pour AUTHENTIFIER le serveur Plex ${CEND}"
+					echo -e "${CCYAN}Pour obtenir un identifiant CLAIM, allez à cette adresse et copier le dans le terminal ${CEND}"
+					echo -e "${CRED}https://www.plex.tv/claim/ ${CEND}"
+					echo ""
+					read -rp "CLAIM = " CLAIM
+
+					if [ -n "$CLAIM" ]
+					then
+						sed -i -e "s/PLEX_CLAIM=/PLEX_CLAIM=${CLAIM}/g" /home/"$USERNAME"/docker-compose.yml
+					fi
+
+					## Lancement de Plex
 					docker-compose -f /home/"$USERNAME"/docker-compose.yml up -d $LOGICIEL-$USERNAME
-					docker-compose up -d $LOGICIEL 2>/dev/null
 					progress-bar 20
 					echo ""
 					echo -e "${CGREEN}Installation de $LOGICIEL réussie${CEND}"
@@ -411,6 +393,15 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 					read -p "Appuyer sur la touche Entrer pour continuer"
 					clear
 					logo.sh
+				fi
+
+				;;
+
+				3)
+				LOGICIEL=radarr
+				add_appli $USERNAME $LOGICIEL
+				if  [ $INSTALL = INSTALL ] ; then
+					ins_appli $USERNAME $LOGICIE
 				fi
 
 				;;
@@ -420,17 +411,7 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 				LOGICIEL=lidarr
 				add_appli $USERNAME $LOGICIEL
 				if  [ $INSTALL = INSTALL ] ; then
-					export $(xargs </home/"$USERNAME"/.env)
-					docker-compose -f /home/"$USERNAME"/docker-compose.yml up -d $LOGICIEL-$USERNAME
-					docker-compose up -d $LOGICIEL 2>/dev/null
-					progress-bar 20
-					echo ""
-					echo -e "${CGREEN}Installation de $LOGICIEL réussie${CEND}"
-					echo ""
-					echo "$LOGICIEL-$USERNAME" >> /home/"$USERNAME"/appli.txt
-					read -p "Appuyer sur la touche Entrer pour continuer"
-					clear
-					logo.sh
+					ins_appli $USERNAME $LOGICIE
 				fi
 
 				;;
@@ -440,17 +421,7 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 				LOGICIEL=medusa
 				add_appli $USERNAME $LOGICIEL
 				if  [ $INSTALL = INSTALL ] ; then
-					export $(xargs </home/"$USERNAME"/.env)
-					docker-compose -f /home/"$USERNAME"/docker-compose.yml up -d $LOGICIEL-$USERNAME
-					docker-compose up -d $LOGICIEL 2>/dev/null
-					progress-bar 20
-					echo ""
-					echo -e "${CGREEN}Installation de $LOGICIEL réussie${CEND}"
-					echo ""
-					echo "$LOGICIEL-$USERNAME" >> /home/"$USERNAME"/appli.txt
-					read -p "Appuyer sur la touche Entrer pour continuer"
-					clear
-					logo.sh
+					ins_appli $USERNAME $LOGICIE
 				fi
 
 				;;
@@ -459,17 +430,7 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 				LOGICIEL=pyload
 				add_appli $USERNAME $LOGICIEL
 				if  [ $INSTALL = INSTALL ] ; then
-					export $(xargs </home/"$USERNAME"/.env)
-					docker-compose -f /home/"$USERNAME"/docker-compose.yml up -d $LOGICIEL-$USERNAME
-					docker-compose up -d $LOGICIEL 2>/dev/null
-					progress-bar 20
-					echo ""
-					echo -e "${CGREEN}Installation de $LOGICIEL réussie${CEND}"
-					echo ""
-					echo "$LOGICIEL-$USERNAME" >> /home/"$USERNAME"/appli.txt
-					read -p "Appuyer sur la touche Entrer pour continuer"
-					clear
-					logo.sh
+					ins_appli $USERNAME $LOGICIE
 				fi
 
 				;;
@@ -478,17 +439,7 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 				LOGICIEL=syncthing
 				add_appli $USERNAME $LOGICIEL
 				if  [ $INSTALL = INSTALL ] ; then
-					export $(xargs </home/"$USERNAME"/.env)
-					docker-compose -f /home/"$USERNAME"/docker-compose.yml up -d $LOGICIEL-$USERNAME
-					docker-compose up -d $LOGICIEL 2>/dev/null
-					progress-bar 20
-					echo ""
-					echo -e "${CGREEN}Installation de $LOGICIEL réussie${CEND}"
-					echo ""
-					echo "$LOGICIEL-$USERNAME" >> /home/"$USERNAME"/appli.txt
-					read -p "Appuyer sur la touche Entrer pour continuer"
-					clear
-					logo.sh
+					ins_appli $USERNAME $LOGICIE
 				fi
 
 				;;
@@ -497,17 +448,7 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 				LOGICIEL=jackett
 				add_appli $USERNAME $LOGICIEL
 				if  [ $INSTALL = INSTALL ] ; then
-					export $(xargs </home/"$USERNAME"/.env)
-					docker-compose -f /home/"$USERNAME"/docker-compose.yml up -d $LOGICIEL-$USERNAME
-					docker-compose up -d $LOGICIEL 2>/dev/null
-					progress-bar 20
-					echo ""
-					echo -e "${CGREEN}Installation de $LOGICIEL réussie${CEND}"
-					echo ""
-					echo "$LOGICIEL-$USERNAME" >> /home/"$USERNAME"/appli.txt
-					read -p "Appuyer sur la touche Entrer pour continuer"
-					clear
-					logo.sh
+					ins_appli $USERNAME $LOGICIE
 				fi
 
 				;;
@@ -516,17 +457,7 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 				LOGICIEL=portainer
 				add_appli $USERNAME $LOGICIEL
 				if  [ $INSTALL = INSTALL ] ; then
-					export $(xargs </home/"$USERNAME"/.env)
-					docker-compose -f /home/"$USERNAME"/docker-compose.yml up -d $LOGICIEL-$USERNAME
-					docker-compose up -d $LOGICIEL 2>/dev/null
-					progress-bar 20
-					echo ""
-					echo -e "${CGREEN}Installation de $LOGICIEL réussie${CEND}"
-					echo ""
-					echo "$LOGICIEL-$USERNAME" >> /home/"$USERNAME"/appli.txt
-					read -p "Appuyer sur la touche Entrer pour continuer"
-					clear
-					logo.sh
+					ins_appli $USERNAME $LOGICIE
 				fi
 
 				;;
@@ -535,17 +466,7 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 				LOGICIEL=tautulli
 				add_appli $USERNAME $LOGICIEL
 				if  [ $INSTALL = INSTALL ] ; then
-					export $(xargs </home/"$USERNAME"/.env)
-					docker-compose -f /home/"$USERNAME"/docker-compose.yml up -d $LOGICIEL-$USERNAME
-					docker-compose up -d $LOGICIEL 2>/dev/null
-					progress-bar 20
-					echo ""
-					echo -e "${CGREEN}Installation de $LOGICIEL réussie${CEND}"
-					echo ""
-					echo "$LOGICIEL-$USERNAME" >> /home/"$USERNAME"/appli.txt
-					read -p "Appuyer sur la touche Entrer pour continuer"
-					clear
-					logo.sh
+					ins_appli $USERNAME $LOGICIE
 				fi
 
 				;;
@@ -554,17 +475,7 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 				LOGICIEL=heimdall
 				add_appli $USERNAME $LOGICIEL
 				if  [ $INSTALL = INSTALL ] ; then
-					export $(xargs </home/"$USERNAME"/.env)
-					docker-compose -f /home/"$USERNAME"/docker-compose.yml up -d $LOGICIEL-$USERNAME
-					docker-compose up -d $LOGICIEL 2>/dev/null
-					progress-bar 20
-					echo ""
-					echo -e "${CGREEN}Installation de $LOGICIEL réussie${CEND}"
-					echo ""
-					echo "$LOGICIEL-$USERNAME" >> /home/"$USERNAME"/appli.txt
-					read -p "Appuyer sur la touche Entrer pour continuer"
-					clear
-					logo.sh
+					ins_appli $USERNAME $LOGICIE
 				fi
 
 				;;
@@ -606,7 +517,6 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 
 				30)
 				sortir=true
-				seedbox.sh
 
 				;;
 
@@ -616,7 +526,12 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 		;;
 
 		5)
-		Suppression appli
+			clear
+			logo.sh
+			echo -e "${CGREEN}-------------------------------------------------------------------------------------------------------------------------${CEND}"
+			echo -e "${CCYAN}					Suppression applications						   ${CEND}"
+			echo -e "${CGREEN}-------------------------------------------------------------------------------------------------------------------------${CEND}"
+			echo ""
 		;;
 
 		6)
@@ -1054,8 +969,7 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 				;;
 
 				3) # quitter
-				sortir=true
-				seedbox.sh
+				break
 				;;
 
 			esac
@@ -1063,13 +977,15 @@ echo -e "${CCYAN}INSTALLATION${CEND}"
 		;;
 
 		15)
-			exit 0
+			break
 		;;
 		*)
 				echo ""
-				progress-bar 5
 				echo ""
 				echo -e "${CRED}Maucvais choix${CEND}"
+				echo ""
+				progress-bar 5
+				echo ""
 
 	esac
 done

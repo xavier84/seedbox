@@ -92,10 +92,25 @@ add_appli () {
 	fi
 }
 
-del_cont () {
-	HISTO=$(wc -l < "$CONFDIR"/ports.txt)
-	PORT=$(( $(($1))+HISTO ))
-	PORT1=$(( $(($2))+HISTO ))
+ins_appli () {
+	USERNAME=$1
+	NAME=$2
+
+	export $(xargs </home/"$USERNAME"/.env)
+	docker-compose -f /home/"$USERNAME"/docker-compose.yml up -d $LOGICIEL-$USERNAME
+	docker-compose up -d $LOGICIEL 2>/dev/null
+	progress-bar 20
+	echo ""
+	echo -e "${CGREEN}Installation de $LOGICIEL réussie${CEND}"
+	echo ""
+	echo "$LOGICIEL-$USERNAME" >> /home/"$USERNAME"/appli.txt
+	read -p "Appuyer sur la touche Entrer pour continuer"
+	clear
+	logo.sh
+}
+
+del_appli () {
+	sed -i '/^${NAME}-$USERNAME$/d' /home/"$USERNAME"/appli.txt
 }
 
 add_domain() {
